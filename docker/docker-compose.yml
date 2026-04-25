@@ -1,0 +1,28 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    working_dir: /workspace
+    volumes:
+      - ../:/workspace
+    environment:
+      PYTHONPATH: /workspace/src
+      CONFIG_PATH: config/default.yaml
+      CLASSES_PATH: config/classes.yaml
+    command: bash
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    working_dir: /workspace
+    volumes:
+      - ../:/workspace
+    environment:
+      PYTHONPATH: /workspace/src
+      CONFIG_PATH: config/default.yaml
+      CLASSES_PATH: config/classes.yaml
+    ports:
+      - "8000:8000"
+    command: uvicorn fire_extinguisher_inspection.api.main:app --host 0.0.0.0 --port 8000

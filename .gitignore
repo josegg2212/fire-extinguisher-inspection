@@ -1,0 +1,42 @@
+# Entornos y cachés
+.env
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Modelos y artefactos pesados
+models/**/*.pt
+models/**/*.pth
+models/**/*.onnx
+models/**/*.engine
+
+# Datos locales
+data/**/*.jpg
+data/**/*.jpeg
+data/**/*.png
+data/**/*.bmp
+data/**/*.webp
+data/**/*.mp4
+data/**/*.avi
+data/**/*.mov
+data/**/*.txt
+!data/yolo/data.yaml.example
+!data/**/.gitkeep
+
+# Salidas generadas
+outputs/**
+!outputs/
+!outputs/**/
+!outputs/**/.gitkeep
+
+# Logs y métricas generadas
+*.log
+*.metrics.json
+
+# Sistema
+.DS_Store
+Thumbs.db

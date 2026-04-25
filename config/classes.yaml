@@ -1,0 +1,7 @@
+detection:
+  0: fire_extinguisher
+
+classification:
+  - visible
+  - partially_occluded
+  - blocked

@@ -1,0 +1,31 @@
+rutas:
+  imagenes_entrada: data/raw
+
+modelos:
+  yolo: models/yolo/extinguisher_yolo.pt
+  yolo_base: yolo11n.pt
+  cnn: models/classifier/state_classifier.pt
+
+datasets:
+  yolo_root: data/yolo
+  yolo_yaml: data/yolo/data.yaml
+  classifier_root: data/classifier
+
+outputs:
+  detections: outputs/detections
+  crops: outputs/crops
+  reports: outputs/reports
+  logs: outputs/logs
+
+inferencia:
+  detection_confidence_threshold: 0.25
+  classification_confidence_threshold: 0.50
+  cnn_image_size: 224
+  crop_margin: 0.05
+  guardar_crops: false
+  guardar_anotada: true
+
+api:
+  host: 0.0.0.0
+  port: 8000
+  guardar_anotada_por_defecto: true

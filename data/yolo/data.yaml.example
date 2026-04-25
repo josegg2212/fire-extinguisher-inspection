@@ -1,0 +1,9 @@
+# Copia este archivo como data.yaml cuando exista el dataset real.
+# Ajusta "path" a la carpeta donde estén las imágenes y etiquetas YOLO.
+path: /ruta/al/dataset_extintores
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: fire_extinguisher
