@@ -6,7 +6,7 @@ Sistema base para detectar extintores en imágenes o vídeo con YOLO y clasifica
 - `partially_occluded`
 - `blocked`
 
-El proyecto está preparado para desarrollarse sin dataset definitivo todavía. Las rutas, scripts y validaciones ya existen, pero el entrenamiento real queda pendiente hasta disponer de imágenes anotadas y recortes etiquetados.
+El proyecto está preparado para desarrollarse aunque todavía no existan pesos entrenados. El dataset YOLO puede prepararse localmente en `data/yolo/`, pero no se versiona en Git; el dataset del clasificador CNN y los entrenamientos reales siguen pendientes.
 
 ## Arquitectura
 
@@ -52,7 +52,7 @@ pip install -r requirements.txt
 export PYTHONPATH="$PWD/src"
 ```
 
-Smoke test sin modelos ni dataset:
+Smoke test sin modelos entrenados:
 
 ```bash
 python3 scripts/smoke_test.py
@@ -70,7 +70,7 @@ Informe de verificación inicial:
 docs/verificacion_inicial.md
 ```
 
-El informe recoge las comprobaciones realizadas antes de pasar a la fase de datasets. En esta fase no hay pesos entrenados ni datasets reales.
+El informe recoge las comprobaciones realizadas antes de pasar a la fase de datasets. Desde entonces puede existir un dataset YOLO local en `data/yolo/`, pero sigue sin versionarse.
 
 ## Configuración
 
@@ -79,6 +79,8 @@ La configuración principal está en `config/default.yaml` y las clases en `conf
 Rutas importantes por defecto:
 
 - YOLO: `models/yolo/extinguisher_yolo.pt`
+- modelo base recomendado para entrenamiento YOLO: `yolo26n.pt`
+- fallback compatible si YOLO26 da problemas en el entorno: `yolo11n.pt`
 - CNN: `models/classifier/state_classifier.pt`
 - dataset YOLO: `data/yolo/data.yaml`
 - dataset CNN: `data/classifier`
@@ -92,15 +94,42 @@ La clase de detección esperada es:
 
 ```yaml
 names:
-  0: fire_extinguisher
+  - fire_extinguisher
 ```
 
-Hay un ejemplo en `data/yolo/data.yaml.example`. Cuando exista el dataset real, crea un `data.yaml` propio apuntando a tus carpetas reales.
+Hay un ejemplo en `data/yolo/data.yaml.example`. El dataset real y `data/yolo/data.yaml` están ignorados por Git para evitar subir imágenes, labels y rutas locales.
+
+Estructura final esperada:
+
+```text
+data/yolo/
+├── train/
+│   ├── images/
+│   └── labels/
+├── valid/
+│   ├── images/
+│   └── labels/
+├── test/
+│   ├── images/
+│   └── labels/
+└── data.yaml
+```
+
+Si recibes un ZIP de Roboflow, colócalo temporalmente en `fire-extinguisher-inspection-docs/`, extráelo primero en `data/raw/extracted_yolo_dataset_tmp/`, revisa su estructura y copia solo los splits YOLO finales a `data/yolo/`. No mezcles contenido desconocido directamente en `data/yolo/`.
 
 Comprobar estructura:
 
 ```bash
-python3 scripts/check_dataset_structure.py --tipo yolo --path data/yolo/data.yaml
+PYTHONPATH=src python3 scripts/check_dataset_structure.py --tipo yolo --path data/yolo/data.yaml
+```
+
+Generar una contact sheet para revisar cajas de forma visual:
+
+```bash
+PYTHONPATH=src python3 scripts/visualize_yolo_dataset_samples.py \
+  --data-yaml data/yolo/data.yaml \
+  --output outputs/reports/contact_sheet_yolo_dataset.jpg \
+  --num-samples 16
 ```
 
 ## Entrenamiento YOLO
@@ -110,7 +139,7 @@ Ejemplo:
 ```bash
 PYTHONPATH=src python3 -m fire_extinguisher_inspection.detection.train_yolo \
   --data data/yolo/data.yaml \
-  --model yolo11n.pt \
+  --model yolo26n.pt \
   --epochs 100 \
   --imgsz 640 \
   --batch 16 \
@@ -119,7 +148,7 @@ PYTHONPATH=src python3 -m fire_extinguisher_inspection.detection.train_yolo \
   --name extinguisher_yolo_v1
 ```
 
-El script valida que el YAML exista antes de entrenar y no espera en bucle a que aparezcan datos.
+El script valida que el YAML exista antes de entrenar y no espera en bucle a que aparezcan datos. `--model` acepta cualquier modelo válido de Ultralytics; se recomienda empezar con `yolo26n.pt` y usar `yolo11n.pt` como fallback de compatibilidad si el entorno todavía no soporta YOLO26.
 
 ## Dataset CNN
 
@@ -144,7 +173,7 @@ data/classifier/
 Comprobar estructura:
 
 ```bash
-python3 scripts/check_dataset_structure.py --tipo classifier --path data/classifier
+PYTHONPATH=src python3 scripts/check_dataset_structure.py --tipo classifier --path data/classifier
 ```
 
 ## Entrenamiento CNN
@@ -265,11 +294,11 @@ Incluido:
 - scripts de uso
 - Docker
 - tests mínimos y smoke test
+- dataset YOLO inicial preparado localmente cuando existe `data/yolo/data.yaml`
 
-Pendiente cuando haya dataset:
+Pendiente antes de entrenar:
 
-- crear `data/yolo/data.yaml` real
-- anotar imágenes completas para YOLO
+- revisar visualmente el dataset YOLO preparado antes de entrenar
 - generar y etiquetar crops para `data/classifier`
 - entrenar pesos reales
 - evaluar detector, clasificador y pipeline completo con métricas medidas

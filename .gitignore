@@ -15,6 +15,7 @@ models/**/*.onnx
 models/**/*.engine
 
 # Datos locales
+*.zip
 data/**/*.jpg
 data/**/*.jpeg
 data/**/*.png
@@ -24,6 +25,7 @@ data/**/*.mp4
 data/**/*.avi
 data/**/*.mov
 data/**/*.txt
+data/**/*.yaml
 !data/yolo/data.yaml.example
 !data/**/.gitkeep
 

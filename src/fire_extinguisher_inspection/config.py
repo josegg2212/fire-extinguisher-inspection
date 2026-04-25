@@ -147,7 +147,7 @@ def cargar_configuracion(
         rutas=RutasConfig(imagenes_entrada=resolver_ruta(rutas["imagenes_entrada"])),
         modelos=ModelosConfig(
             yolo=resolver_ruta(modelos["yolo"]),
-            yolo_base=str(modelos.get("yolo_base", "yolo11n.pt")),
+            yolo_base=str(modelos.get("yolo_base", "yolo26n.pt")),
             cnn=resolver_ruta(modelos["cnn"]),
         ),
         datasets=DatasetsConfig(

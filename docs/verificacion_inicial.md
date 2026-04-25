@@ -310,5 +310,7 @@ Preparar el dataset YOLO real:
 - recopilar imágenes reales
 - anotar bounding boxes de `fire_extinguisher`
 - mantener separación por escena/secuencia para `train`, `val` y `test`
+- entrenar preferiblemente con `yolo26n.pt` como modelo base
+- usar `yolo11n.pt` como fallback compatible si YOLO26 no está disponible en el entorno
 
 No se debe entrenar YOLO ni la CNN hasta que el dataset esté definido y revisado.

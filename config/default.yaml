@@ -3,7 +3,7 @@ rutas:
 
 modelos:
   yolo: models/yolo/extinguisher_yolo.pt
-  yolo_base: yolo11n.pt
+  yolo_base: yolo26n.pt
   cnn: models/classifier/state_classifier.pt
 
 datasets:
