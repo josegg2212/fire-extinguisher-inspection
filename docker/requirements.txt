@@ -1,4 +1,5 @@
 fastapi
+httpx
 uvicorn
 python-multipart
 ultralytics
@@ -6,5 +7,3 @@ opencv-python-headless
 numpy<2
 Pillow
 PyYAML
-torch
-torchvision

@@ -25,6 +25,33 @@ else:
     _FASTAPI_IMPORT_ERROR = None
 
 
+class AplicacionNoDisponible:
+    """ASGI mínimo para informar que falta FastAPI sin romper imports."""
+
+    def __init__(self, title: str, detalle: str) -> None:
+        self.title = title
+        self.version = "0.1.0"
+        self.routes: list[Any] = []
+        self.detalle = detalle
+
+    async def __call__(self, scope: dict[str, Any], receive: Any, send: Any) -> None:
+        """Devuelve 503 si alguien intenta servir la API sin dependencias."""
+
+        contenido = (
+            '{"status":"error","detail":"'
+            + self.detalle.replace('"', "'")
+            + '"}'
+        ).encode("utf-8")
+        await send(
+            {
+                "type": "http.response.start",
+                "status": 503,
+                "headers": [(b"content-type", b"application/json")],
+            }
+        )
+        await send({"type": "http.response.body", "body": contenido})
+
+
 def _nombre_seguro(nombre: str) -> str:
     nombre = Path(nombre).name
     nombre = re.sub(r"[^A-Za-z0-9_.-]", "_", nombre)
@@ -81,5 +108,8 @@ def crear_app():
 
 try:
     app = crear_app()
-except RuntimeError:
-    app = None
+except RuntimeError as exc:
+    app = AplicacionNoDisponible(
+        title="Inspección visual de extintores",
+        detalle=f"API no disponible hasta instalar dependencias: {exc}",
+    )

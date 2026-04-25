@@ -64,6 +64,14 @@ Tests mínimos:
 PYTHONPATH=src python3 -m unittest discover -s tests
 ```
 
+Informe de verificación inicial:
+
+```text
+docs/verificacion_inicial.md
+```
+
+El informe recoge las comprobaciones realizadas antes de pasar a la fase de datasets. En esta fase no hay pesos entrenados ni datasets reales.
+
 ## Configuración
 
 La configuración principal está en `config/default.yaml` y las clases en `config/classes.yaml`.
@@ -227,6 +235,19 @@ docker compose -f docker/docker-compose.yml up api
 ```
 
 El contenedor monta el repositorio en `/workspace` y define `PYTHONPATH=/workspace/src`. No asume GPU.
+La imagen instala PyTorch en variante CPU para evitar dependencias CUDA innecesarias.
+
+Para revisar la configuración de Compose sin construir la imagen:
+
+```bash
+docker compose -f docker/docker-compose.yml config
+```
+
+Si el entorno no puede descargar `python:3.12-slim` pero ya existe una imagen Python local, se puede indicar una base alternativa:
+
+```bash
+PYTHON_IMAGE=<imagen-python-local> docker compose -f docker/docker-compose.yml build
+```
 
 ## Estado actual
 

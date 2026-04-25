@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import argparse
+import json
 from pathlib import Path
 from typing import Any
 
@@ -113,3 +115,48 @@ def predecir_crop(
         device=device,
     )
     return predictor.predecir_imagen(image_path)
+
+
+def crear_parser() -> argparse.ArgumentParser:
+    """Crea el parser de argumentos para inferencia sobre un crop."""
+
+    parser = argparse.ArgumentParser(description="Clasifica el estado visual de un crop de extintor.")
+    parser.add_argument("--image", required=True, help="Ruta al crop de entrada.")
+    parser.add_argument("--model-path", required=True, help="Ruta al checkpoint CNN.")
+    parser.add_argument("--image-size", type=int, default=224, help="Tamaño de entrada usado por la CNN.")
+    parser.add_argument("--device", default=None, help="Dispositivo opcional: cpu, cuda o cuda:0.")
+    return parser
+
+
+def main() -> int:
+    """Punto de entrada CLI para predicción de un crop."""
+
+    args = crear_parser().parse_args()
+    try:
+        clase, confianza, probabilidades = predecir_crop(
+            image_path=args.image,
+            model_path=args.model_path,
+            image_size=args.image_size,
+            device=args.device,
+        )
+    except Exception as exc:
+        print(f"ERROR: {exc}")
+        return 2
+
+    print(
+        json.dumps(
+            {
+                "image_path": args.image,
+                "status_prediction": clase,
+                "status_confidence": confianza,
+                "probabilities": probabilidades,
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
