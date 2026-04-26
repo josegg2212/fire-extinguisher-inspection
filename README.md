@@ -132,23 +132,132 @@ PYTHONPATH=src python3 scripts/visualize_yolo_dataset_samples.py \
   --num-samples 16
 ```
 
-## Entrenamiento YOLO
+## Verificación previa al entrenamiento YOLO
 
-Ejemplo:
+Antes de entrenar conviene validar de nuevo el dataset:
+
+```bash
+PYTHONPATH=src python3 scripts/check_dataset_structure.py --tipo yolo --path data/yolo/data.yaml
+```
+
+Revisar labels vacíos:
+
+```bash
+PYTHONPATH=src python3 scripts/visualize_empty_yolo_labels.py \
+  --data-yaml data/yolo/data.yaml \
+  --output outputs/reports/empty_labels_contact_sheet.jpg \
+  --report docs/empty_labels_review.md
+```
+
+Si el Python local no tiene Pillow, usa el contenedor:
+
+```bash
+docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app \
+  python3 scripts/visualize_empty_yolo_labels.py \
+  --data-yaml data/yolo/data.yaml \
+  --output outputs/reports/empty_labels_contact_sheet.jpg \
+  --report docs/empty_labels_review.md
+```
+
+Entrenamiento corto de prueba, solo después de corregir o aceptar explícitamente los labels vacíos:
 
 ```bash
 PYTHONPATH=src python3 -m fire_extinguisher_inspection.detection.train_yolo \
   --data data/yolo/data.yaml \
   --model yolo26n.pt \
-  --epochs 100 \
+  --epochs 3 \
   --imgsz 640 \
   --batch 16 \
   --workers 0 \
   --project models/yolo \
-  --name extinguisher_yolo_v1
+  --name extinguisher_yolo_test \
+  --device 0
+```
+
+El script genera una copia temporal del YAML en `outputs/logs/` con la ruta del dataset resuelta para Ultralytics. Esto evita problemas con `path: .` cuando se lanza desde Docker o desde la raíz del repositorio.
+
+Si el Python local no tiene Ultralytics instalado, se puede usar Docker. Para CPU:
+
+```bash
+docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app \
+  python3 -m fire_extinguisher_inspection.detection.train_yolo \
+  --data data/yolo/data.yaml \
+  --model yolo26n.pt \
+  --epochs 3 \
+  --imgsz 640 \
+  --batch 16 \
+  --workers 0 \
+  --project models/yolo \
+  --name extinguisher_yolo_test
+```
+
+Para GPU, el Compose incluye el servicio `app-gpu`, que instala PyTorch con CUDA y expone la GPU del host:
+
+```bash
+docker compose -f docker/docker-compose.yml build app-gpu
+docker compose -f docker/docker-compose.yml run --rm --no-deps app-gpu \
+  python3 -m fire_extinguisher_inspection.detection.train_yolo \
+  --data data/yolo/data.yaml \
+  --model yolo26n.pt \
+  --epochs 3 \
+  --imgsz 640 \
+  --batch 16 \
+  --workers 0 \
+  --project models/yolo \
+  --name extinguisher_yolo_test_gpu \
+  --device 0
+```
+
+En una GTX 1650 se verificó un entrenamiento corto de 3 épocas con YOLO26. Ultralytics desactivó AMP automáticamente, pero el entrenamiento terminó y guardó resultados en `models/yolo/extinguisher_yolo_test_gpu/`. Esos pesos y salidas están ignorados por Git.
+
+Fallback si YOLO26 no está disponible en la versión instalada de Ultralytics:
+
+```bash
+PYTHONPATH=src python3 -m fire_extinguisher_inspection.detection.train_yolo \
+  --data data/yolo/data.yaml \
+  --model yolo11n.pt \
+  --epochs 3 \
+  --imgsz 640 \
+  --batch 16 \
+  --workers 0 \
+  --project models/yolo \
+  --name extinguisher_yolo11_test \
+  --device 0
+```
+
+## Entrenamiento YOLO
+
+Entrenamiento real recomendado de 50 épocas, una vez validado el dataset:
+
+```bash
+PYTHONPATH=src python3 -m fire_extinguisher_inspection.detection.train_yolo \
+  --data data/yolo/data.yaml \
+  --model yolo26n.pt \
+  --epochs 50 \
+  --imgsz 640 \
+  --batch 16 \
+  --workers 0 \
+  --project models/yolo \
+  --name extinguisher_yolo_v1 \
+  --device 0
 ```
 
 El script valida que el YAML exista antes de entrenar y no espera en bucle a que aparezcan datos. `--model` acepta cualquier modelo válido de Ultralytics; se recomienda empezar con `yolo26n.pt` y usar `yolo11n.pt` como fallback de compatibilidad si el entorno todavía no soporta YOLO26.
+
+Fallback para entrenamiento real:
+
+```bash
+PYTHONPATH=src python3 -m fire_extinguisher_inspection.detection.train_yolo \
+  --data data/yolo/data.yaml \
+  --model yolo11n.pt \
+  --epochs 50 \
+  --imgsz 640 \
+  --batch 16 \
+  --workers 0 \
+  --project models/yolo \
+  --name extinguisher_yolo11_v1 \
+  --device 0
+```
 
 ## Dataset CNN
 
@@ -266,6 +375,20 @@ docker compose -f docker/docker-compose.yml up api
 El contenedor monta el repositorio en `/workspace` y define `PYTHONPATH=/workspace/src`. No asume GPU.
 La imagen instala PyTorch en variante CPU para evitar dependencias CUDA innecesarias.
 
+Construir shell con soporte GPU:
+
+```bash
+docker compose -f docker/docker-compose.yml build app-gpu
+docker compose -f docker/docker-compose.yml run --rm --no-deps app-gpu
+```
+
+Comprobar CUDA dentro del contenedor GPU:
+
+```bash
+docker compose -f docker/docker-compose.yml run --rm --no-deps app-gpu \
+  python3 -c "import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'sin GPU')"
+```
+
 Para revisar la configuración de Compose sin construir la imagen:
 
 ```bash
@@ -295,10 +418,11 @@ Incluido:
 - Docker
 - tests mínimos y smoke test
 - dataset YOLO inicial preparado localmente cuando existe `data/yolo/data.yaml`
+- entrenamiento corto YOLO26 de 3 épocas verificado en GPU local; resultados ignorados por Git
 
 Pendiente antes de entrenar:
 
-- revisar visualmente el dataset YOLO preparado antes de entrenar
+- lanzar entrenamiento YOLO real de 50 épocas si se acepta el dataset actual
 - generar y etiquetar crops para `data/classifier`
-- entrenar pesos reales
+- entrenar pesos reales definitivos
 - evaluar detector, clasificador y pipeline completo con métricas medidas

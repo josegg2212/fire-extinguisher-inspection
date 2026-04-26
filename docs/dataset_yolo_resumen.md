@@ -140,4 +140,6 @@ Resultado:
 
 ## Estado
 
-El dataset queda preparado para la siguiente fase de revisión visual y entrenamiento YOLO. No se ha entrenado ningún modelo ni se han descargado pesos.
+El dataset queda preparado para revisión previa al entrenamiento YOLO. Tras revisar los 12 labels vacíos, se recomendó corregirlos o excluirlos antes de entrenar. Posteriormente se decidió aceptarlos temporalmente por ser pocos frente al volumen total del dataset; los detalles están en `docs/yolo_pretraining_check.md` y `docs/empty_labels_review.md`.
+
+Durante la verificación posterior se descargó localmente el peso base `yolo26n.pt` dentro de `models/yolo/base/`, ignorado por Git. También se completó un entrenamiento corto de prueba de 3 épocas en `models/yolo/extinguisher_yolo_test_gpu/`, igualmente ignorado por Git. Todavía no hay un modelo final entrenado de 50 épocas.

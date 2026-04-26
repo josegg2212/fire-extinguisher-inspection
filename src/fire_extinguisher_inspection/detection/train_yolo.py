@@ -5,6 +5,9 @@ from __future__ import annotations
 import argparse
 import logging
 from pathlib import Path
+from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def crear_parser() -> argparse.ArgumentParser:
@@ -27,6 +30,69 @@ def crear_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _resolver_path_dataset(ruta_data: Path, datos: dict[str, Any]) -> Path:
+    """Resuelve la raíz del dataset de forma estable para Ultralytics."""
+
+    valor_path = datos.get("path")
+    if valor_path is None:
+        return ruta_data.parent.resolve()
+
+    ruta_path = Path(str(valor_path))
+    if ruta_path.is_absolute():
+        return ruta_path
+
+    candidatos = [
+        (ruta_data.parent / ruta_path).resolve(),
+        (Path.cwd() / ruta_path).resolve(),
+        (REPO_ROOT / ruta_path).resolve(),
+    ]
+    for candidato in candidatos:
+        if candidato.exists():
+            return candidato
+    return candidatos[0]
+
+
+def preparar_yaml_para_ultralytics(ruta_data: Path) -> Path:
+    """Crea una copia temporal del YAML con `path` absoluto.
+
+    Ultralytics puede interpretar `path: .` relativo al directorio de ejecución.
+    Para evitar errores al lanzar el script desde Docker u otra carpeta, se genera
+    un YAML equivalente en `outputs/logs/` con la raíz del dataset ya resuelta.
+    """
+
+    try:
+        import yaml
+    except ImportError:
+        logging.warning("PyYAML no está disponible; se usará el data.yaml original.")
+        return ruta_data
+
+    try:
+        datos = yaml.safe_load(ruta_data.read_text(encoding="utf-8")) or {}
+    except Exception as exc:
+        logging.warning("No se pudo normalizar %s: %s", ruta_data, exc)
+        return ruta_data
+
+    if not isinstance(datos, dict):
+        logging.warning("El archivo %s no contiene un diccionario YAML válido.", ruta_data)
+        return ruta_data
+
+    datos["path"] = str(_resolver_path_dataset(ruta_data, datos))
+    ruta_salida = REPO_ROOT / "outputs" / "logs" / f"{ruta_data.stem}_ultralytics_resuelto.yaml"
+    ruta_salida.parent.mkdir(parents=True, exist_ok=True)
+    ruta_salida.write_text(yaml.safe_dump(datos, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    logging.info("YAML normalizado para Ultralytics: %s", ruta_salida)
+    return ruta_salida
+
+
+def resolver_directorio_proyecto(project: str) -> str:
+    """Resuelve el directorio de salida para evitar `runs/detect` inesperados."""
+
+    ruta_project = Path(project)
+    if not ruta_project.is_absolute():
+        ruta_project = REPO_ROOT / ruta_project
+    return str(ruta_project.resolve())
+
+
 def entrenar(args: argparse.Namespace) -> int:
     """Valida argumentos y lanza el entrenamiento YOLO."""
 
@@ -44,20 +110,21 @@ def entrenar(args: argparse.Namespace) -> int:
 
     logging.info("Cargando modelo base: %s", args.model)
     modelo = YOLO(args.model)
+    ruta_data_entrenamiento = preparar_yaml_para_ultralytics(ruta_data)
 
     parametros = {
-        "data": str(ruta_data),
+        "data": str(ruta_data_entrenamiento),
         "epochs": args.epochs,
         "imgsz": args.imgsz,
         "batch": args.batch,
         "workers": args.workers,
-        "project": args.project,
+        "project": resolver_directorio_proyecto(args.project),
         "name": args.name,
     }
     if args.device is not None:
         parametros["device"] = args.device
 
-    logging.info("Iniciando entrenamiento YOLO con data=%s", ruta_data)
+    logging.info("Iniciando entrenamiento YOLO con data=%s", ruta_data_entrenamiento)
     resultados = modelo.train(**parametros)
     save_dir = getattr(resultados, "save_dir", None)
     logging.info("Entrenamiento finalizado. Salida: %s", save_dir or args.project)

@@ -9,10 +9,21 @@ __pycache__/
 .ruff_cache/
 
 # Modelos y artefactos pesados
+*.pt
+*.pth
+*.onnx
+*.engine
+models/yolo/**
+models/classifier/**
+!models/
+!models/yolo/
+!models/classifier/
+!models/**/.gitkeep
 models/**/*.pt
 models/**/*.pth
 models/**/*.onnx
 models/**/*.engine
+runs/**
 
 # Datos locales
 *.zip
@@ -26,6 +37,7 @@ data/**/*.avi
 data/**/*.mov
 data/**/*.txt
 data/**/*.yaml
+data/**/*.cache
 !data/yolo/data.yaml.example
 !data/**/.gitkeep
 

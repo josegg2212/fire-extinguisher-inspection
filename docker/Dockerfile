@@ -5,6 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/workspace/src
 ENV YOLO_CONFIG_DIR=/tmp
+ENV MPLCONFIGDIR=/tmp/matplotlib
 
 WORKDIR /workspace
 
@@ -15,7 +16,8 @@ RUN apt-get update \
 COPY docker/requirements.txt /tmp/requirements.txt
 ARG TORCH_VERSION=2.8.0+cpu
 ARG TORCHVISION_VERSION=0.23.0+cpu
-RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu \
+ARG TORCH_INDEX_URL=https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir --extra-index-url "${TORCH_INDEX_URL}" \
         "torch==${TORCH_VERSION}" \
         "torchvision==${TORCHVISION_VERSION}" \
     && pip install --no-cache-dir -r /tmp/requirements.txt

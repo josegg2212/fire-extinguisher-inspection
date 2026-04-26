@@ -5,6 +5,9 @@ services:
       dockerfile: docker/Dockerfile
       args:
         PYTHON_IMAGE: ${PYTHON_IMAGE:-python:3.12-slim}
+        TORCH_VERSION: ${TORCH_VERSION:-2.8.0+cpu}
+        TORCHVISION_VERSION: ${TORCHVISION_VERSION:-0.23.0+cpu}
+        TORCH_INDEX_URL: ${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cpu}
     working_dir: /workspace
     volumes:
       - ../:/workspace
@@ -13,6 +16,30 @@ services:
       CONFIG_PATH: config/default.yaml
       CLASSES_PATH: config/classes.yaml
       YOLO_CONFIG_DIR: /tmp
+      MPLCONFIGDIR: /tmp/matplotlib
+    command: bash
+
+  app-gpu:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        PYTHON_IMAGE: ${PYTHON_IMAGE:-python:3.12-slim}
+        TORCH_VERSION: ${TORCH_GPU_VERSION:-2.8.0+cu126}
+        TORCHVISION_VERSION: ${TORCHVISION_GPU_VERSION:-0.23.0+cu126}
+        TORCH_INDEX_URL: ${TORCH_GPU_INDEX_URL:-https://download.pytorch.org/whl/cu126}
+    working_dir: /workspace
+    volumes:
+      - ../:/workspace
+    environment:
+      PYTHONPATH: /workspace/src
+      CONFIG_PATH: config/default.yaml
+      CLASSES_PATH: config/classes.yaml
+      YOLO_CONFIG_DIR: /tmp
+      MPLCONFIGDIR: /tmp/matplotlib
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+    gpus: all
     command: bash
 
   api:
@@ -21,6 +48,9 @@ services:
       dockerfile: docker/Dockerfile
       args:
         PYTHON_IMAGE: ${PYTHON_IMAGE:-python:3.12-slim}
+        TORCH_VERSION: ${TORCH_VERSION:-2.8.0+cpu}
+        TORCHVISION_VERSION: ${TORCHVISION_VERSION:-0.23.0+cpu}
+        TORCH_INDEX_URL: ${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cpu}
     working_dir: /workspace
     volumes:
       - ../:/workspace
@@ -29,6 +59,7 @@ services:
       CONFIG_PATH: config/default.yaml
       CLASSES_PATH: config/classes.yaml
       YOLO_CONFIG_DIR: /tmp
+      MPLCONFIGDIR: /tmp/matplotlib
     ports:
       - "8000:8000"
     command: uvicorn fire_extinguisher_inspection.api.main:app --host 0.0.0.0 --port 8000
