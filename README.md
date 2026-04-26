@@ -261,6 +261,12 @@ PYTHONPATH=src python3 -m fire_extinguisher_inspection.detection.train_yolo \
 
 ## Dataset CNN
 
+La CNN de estado trabaja con crops de extintores en formato `ImageFolder` y tres clases:
+
+- `visible`
+- `partially_occluded`
+- `blocked`
+
 Estructura esperada:
 
 ```text
@@ -279,7 +285,72 @@ data/classifier/
     └── blocked/
 ```
 
-Comprobar estructura:
+### Generación del dataset de clasificación de estado
+
+El dataset inicial se puede generar desde las anotaciones YOLO ya revisadas. El script recorta cada bbox real como `visible` y crea variantes semi-sintéticas para `partially_occluded` y `blocked`, manteniendo siempre separados los splits de origen: YOLO `train` va a classifier `train`, YOLO `valid`/`val` va a classifier `val` y YOLO `test` va a classifier `test`.
+
+Generación limitada para prueba:
+
+```bash
+PYTHONPATH=src python3 scripts/generate_classifier_dataset_from_yolo.py \
+  --data-yaml data/yolo/data.yaml \
+  --output-dir data/classifier \
+  --max-per-split 20 \
+  --partial-occlusions-per-object 1 \
+  --blocked-occlusions-per-object 1 \
+  --image-size 224 \
+  --overwrite
+```
+
+Generación completa, cuando la prueba visual sea satisfactoria:
+
+```bash
+PYTHONPATH=src python3 scripts/generate_classifier_dataset_from_yolo.py \
+  --data-yaml data/yolo/data.yaml \
+  --output-dir data/classifier \
+  --partial-occlusions-per-object 1 \
+  --blocked-occlusions-per-object 1 \
+  --visible-crops-per-object 1 \
+  --image-size 224 \
+  --overwrite
+```
+
+En la generación completa v1 se obtuvieron 28.797 crops: 21.909 en `train`, 4.656 en `val` y 2.232 en `test`. La diferencia respecto a las 29.052 imágenes esperadas viene de 85 anotaciones descartadas por crop menor que `--min-crop-size 32`; los 12 labels vacíos de `train` ya estaban documentados.
+
+Los crops generados son datos locales y no deben subirse a Git. `data/classifier/train/`, `data/classifier/val/`, `data/classifier/test/` y `outputs/` están ignorados, salvo los `.gitkeep`.
+
+Validar estructura e imágenes:
+
+```bash
+PYTHONPATH=src python3 scripts/check_classifier_dataset_structure.py \
+  --dataset-dir data/classifier
+```
+
+Generar contact sheets para revisión visual:
+
+```bash
+PYTHONPATH=src python3 scripts/visualize_classifier_dataset_samples.py \
+  --dataset-dir data/classifier \
+  --split train \
+  --output outputs/reports/contact_sheet_classifier_train_full.jpg \
+  --num-samples-per-class 10
+
+PYTHONPATH=src python3 scripts/visualize_classifier_dataset_samples.py \
+  --dataset-dir data/classifier \
+  --split val \
+  --output outputs/reports/contact_sheet_classifier_val_full.jpg \
+  --num-samples-per-class 10
+
+PYTHONPATH=src python3 scripts/visualize_classifier_dataset_samples.py \
+  --dataset-dir data/classifier \
+  --split test \
+  --output outputs/reports/contact_sheet_classifier_test_full.jpg \
+  --num-samples-per-class 10
+```
+
+Las clases `partially_occluded` y `blocked` son semi-sintéticas en esta primera versión. Antes de entrenar la CNN, revisa las contact sheets y descarta o ajusta el generador si las oclusiones no resultan útiles.
+
+Comprobar estructura con el validador general:
 
 ```bash
 PYTHONPATH=src python3 scripts/check_dataset_structure.py --tipo classifier --path data/classifier

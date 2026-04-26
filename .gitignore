@@ -38,6 +38,9 @@ data/**/*.mov
 data/**/*.txt
 data/**/*.yaml
 data/**/*.cache
+data/classifier/train/**
+data/classifier/val/**
+data/classifier/test/**
 !data/yolo/data.yaml.example
 !data/**/.gitkeep
 
