@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import math
 from pathlib import Path
 from typing import Any
 
@@ -95,6 +96,54 @@ def evaluar(modelo: Any, loader: Any, criterio: Any, device: Any) -> tuple[float
     return total_loss / max(total, 1), correctos / max(total, 1)
 
 
+def _metricas_son_finitas(registro: dict[str, float | int]) -> bool:
+    """Comprueba que las métricas numéricas no contienen NaN ni infinitos."""
+
+    for clave in ("train_loss", "train_accuracy", "val_loss", "val_accuracy"):
+        valor = float(registro[clave])
+        if not math.isfinite(valor):
+            logging.error("Métrica no finita detectada: %s=%s", clave, valor)
+            return False
+    return True
+
+
+def _escribir_metricas(
+    metrics_path: Path,
+    historial: list[dict[str, float | int]],
+    *,
+    mejor_epoch: int,
+    mejor_val_acc: float,
+    class_names: list[str],
+    device: Any,
+    args: argparse.Namespace,
+    status: str,
+) -> None:
+    """Guarda el historial acumulado para no perder métricas si se interrumpe."""
+
+    metrics_path.write_text(
+        json.dumps(
+            {
+                "history": historial,
+                "best_epoch": mejor_epoch,
+                "best_val_accuracy": mejor_val_acc,
+                "class_names": class_names,
+                "device": str(device),
+                "dataset_path": args.dataset_path,
+                "status": status,
+                "hyperparameters": {
+                    "epochs": args.epochs,
+                    "batch_size": args.batch_size,
+                    "learning_rate": args.learning_rate,
+                    "image_size": args.image_size,
+                    "num_workers": args.num_workers,
+                },
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+
 def entrenar(args: argparse.Namespace) -> int:
     """Ejecuta el entrenamiento completo."""
 
@@ -129,6 +178,7 @@ def entrenar(args: argparse.Namespace) -> int:
     metrics_path = output_model_path.with_suffix(".metrics.json")
 
     mejor_val_acc = -1.0
+    mejor_epoch = 0
     historial: list[dict[str, float | int]] = []
 
     logging.info("Entrenando en %s con clases %s", device, class_names)
@@ -145,6 +195,19 @@ def entrenar(args: argparse.Namespace) -> int:
         }
         historial.append(registro)
 
+        if not _metricas_son_finitas(registro):
+            _escribir_metricas(
+                metrics_path,
+                historial,
+                mejor_epoch=mejor_epoch,
+                mejor_val_acc=mejor_val_acc,
+                class_names=class_names,
+                device=device,
+                args=args,
+                status="error_metricas_no_finitas",
+            )
+            return 2
+
         logging.info(
             "Época %03d/%03d | train_loss=%.4f train_acc=%.4f | val_loss=%.4f val_acc=%.4f",
             epoch,
@@ -157,6 +220,7 @@ def entrenar(args: argparse.Namespace) -> int:
 
         if val_acc > mejor_val_acc:
             mejor_val_acc = val_acc
+            mejor_epoch = epoch
             torch.save(
                 {
                     "model_state_dict": modelo.state_dict(),
@@ -164,12 +228,34 @@ def entrenar(args: argparse.Namespace) -> int:
                     "image_size": args.image_size,
                     "architecture": "simple_cnn",
                     "best_val_accuracy": mejor_val_acc,
+                    "best_epoch": mejor_epoch,
+                    "dataset_path": args.dataset_path,
                 },
                 output_model_path,
             )
             logging.info("Nuevo mejor modelo guardado en %s", output_model_path)
 
-    metrics_path.write_text(json.dumps({"history": historial}, indent=2), encoding="utf-8")
+        _escribir_metricas(
+            metrics_path,
+            historial,
+            mejor_epoch=mejor_epoch,
+            mejor_val_acc=mejor_val_acc,
+            class_names=class_names,
+            device=device,
+            args=args,
+            status="running",
+        )
+
+    _escribir_metricas(
+        metrics_path,
+        historial,
+        mejor_epoch=mejor_epoch,
+        mejor_val_acc=mejor_val_acc,
+        class_names=class_names,
+        device=device,
+        args=args,
+        status="completed",
+    )
     logging.info("Métricas guardadas en %s", metrics_path)
     return 0
 

@@ -15,8 +15,11 @@ class DetectionResult:
     class_name: str
     class_id: int | None = None
     crop_path: str | None = None
+    classifier_crop_path: str | None = None
+    classifier_crop_bbox: list[int] | None = None
     status_prediction: str | None = None
     status_confidence: float | None = None
+    status_probabilities: dict[str, float] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convierte el resultado a diccionario serializable."""

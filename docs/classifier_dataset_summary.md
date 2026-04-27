@@ -2,6 +2,8 @@
 
 Fecha: 2026-04-26
 
+> Nota 2026-04-26: este documento describe la v1 del dataset CNN en `data/classifier/`. La v1 fue util para validar el flujo de generacion, entrenamiento corto e integracion preliminar, pero queda superada para el siguiente entrenamiento porque sus crops eran demasiado ajustados al bbox YOLO y perdian contexto. La version recomendada para la proxima CNN baseline es `data/classifier_context_v2/`, documentada en `docs/classifier_context_v2_summary.md`.
+
 ## Origen
 
 El dataset inicial de clasificacion de estado se genera localmente a partir del dataset YOLO ya validado en:

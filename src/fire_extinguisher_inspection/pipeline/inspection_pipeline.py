@@ -9,7 +9,10 @@ from fire_extinguisher_inspection.classification.predict_classifier import CNNSt
 from fire_extinguisher_inspection.config import Configuracion, cargar_configuracion
 from fire_extinguisher_inspection.detection.yolo_detector import YoloExtinguisherDetector
 from fire_extinguisher_inspection.pipeline.result_schema import DetectionResult, InspectionResult
-from fire_extinguisher_inspection.preprocessing.crop_utils import guardar_crop, recortar_con_margen
+from fire_extinguisher_inspection.preprocessing.crop_utils import (
+    calcular_region_contextual,
+    guardar_crop,
+)
 from fire_extinguisher_inspection.visualization.draw_results import dibujar_resultados
 
 
@@ -21,6 +24,7 @@ class InspectionPipeline:
 
     def __init__(self, config: Configuracion | None = None) -> None:
         self.config = config or cargar_configuracion()
+        self._detector: YoloExtinguisherDetector | None = None
         self._clasificador: CNNStatePredictor | None = None
 
     def inspeccionar_imagen(
@@ -45,14 +49,8 @@ class InspectionPipeline:
         if imagen is None:
             return resultado
 
-        try:
-            detector = YoloExtinguisherDetector(
-                model_path=self.config.modelos.yolo,
-                confidence_threshold=self.config.inferencia.detection_confidence_threshold,
-                class_names=self.config.clases.detection,
-            )
-        except Exception as exc:
-            resultado.errors.append(str(exc))
+        detector = self._cargar_detector(resultado)
+        if detector is None:
             return resultado
 
         try:
@@ -76,28 +74,35 @@ class InspectionPipeline:
             )
 
             try:
-                crop = recortar_con_margen(
-                    imagen,
+                x1c, y1c, x2c, y2c = calcular_region_contextual(
+                    imagen.shape[1],
+                    imagen.shape[0],
                     deteccion_yolo.bbox,
-                    margen=self.config.inferencia.crop_margin,
+                    context_padding=self.config.inferencia.classifier_context_padding,
+                    square=self.config.inferencia.classifier_square_crop,
                 )
+                crop = imagen[y1c:y2c, x1c:x2c]
+                deteccion.classifier_crop_bbox = [x1c, y1c, x2c, y2c]
             except Exception as exc:
-                resultado.warnings.append(f"No se pudo recortar la detección {indice}: {exc}")
+                resultado.warnings.append(f"No se pudo generar el crop contextual de la detección {indice}: {exc}")
                 resultado.detections.append(deteccion)
                 continue
 
             if guardar_crops:
                 crop_path = self._ruta_crop(ruta_imagen, indice)
                 try:
-                    deteccion.crop_path = str(guardar_crop(crop, crop_path))
+                    ruta_crop = str(guardar_crop(crop, crop_path))
+                    deteccion.crop_path = ruta_crop
+                    deteccion.classifier_crop_path = ruta_crop
                 except Exception as exc:
                     resultado.warnings.append(f"No se pudo guardar el crop {indice}: {exc}")
 
             if clasificador is not None:
                 try:
-                    clase, confianza, _ = clasificador.predecir_array_bgr(crop)
+                    clase, confianza, probabilidades = clasificador.predecir_array_bgr(crop)
                     deteccion.status_prediction = clase
                     deteccion.status_confidence = confianza
+                    deteccion.status_probabilities = probabilidades
                     if confianza < self.config.inferencia.classification_confidence_threshold:
                         resultado.warnings.append(
                             f"La clasificación de la detección {indice} está por debajo del umbral: "
@@ -116,6 +121,23 @@ class InspectionPipeline:
                 resultado.warnings.append(f"No se pudo guardar la imagen anotada: {exc}")
 
         return resultado
+
+    def _cargar_detector(self, resultado: InspectionResult) -> YoloExtinguisherDetector | None:
+        """Carga YOLO una sola vez para procesar lotes de imágenes."""
+
+        if self._detector is not None:
+            return self._detector
+
+        try:
+            self._detector = YoloExtinguisherDetector(
+                model_path=self.config.modelos.yolo,
+                confidence_threshold=self.config.inferencia.detection_confidence_threshold,
+                class_names=self.config.clases.detection,
+            )
+            return self._detector
+        except Exception as exc:
+            resultado.errors.append(str(exc))
+            return None
 
     def _leer_imagen_si_hace_falta(self, resultado: InspectionResult):
         try:

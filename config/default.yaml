@@ -22,6 +22,8 @@ inferencia:
   classification_confidence_threshold: 0.50
   cnn_image_size: 224
   crop_margin: 0.05
+  classifier_context_padding: 0.75
+  classifier_square_crop: true
   guardar_crops: false
   guardar_anotada: true
 

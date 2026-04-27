@@ -55,6 +55,8 @@ class InferenciaConfig:
     classification_confidence_threshold: float
     cnn_image_size: int
     crop_margin: float
+    classifier_context_padding: float
+    classifier_square_crop: bool
     guardar_crops: bool
     guardar_anotada: bool
 
@@ -166,6 +168,8 @@ def cargar_configuracion(
             classification_confidence_threshold=float(inferencia["classification_confidence_threshold"]),
             cnn_image_size=int(inferencia["cnn_image_size"]),
             crop_margin=float(inferencia["crop_margin"]),
+            classifier_context_padding=float(inferencia.get("classifier_context_padding", 0.75)),
+            classifier_square_crop=bool(inferencia.get("classifier_square_crop", True)),
             guardar_crops=bool(inferencia["guardar_crops"]),
             guardar_anotada=bool(inferencia["guardar_anotada"]),
         ),
