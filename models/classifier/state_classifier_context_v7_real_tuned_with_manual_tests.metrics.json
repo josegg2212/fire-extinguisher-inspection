@@ -1,0 +1,63 @@
+{
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.4860368172063472,
+      "train_accuracy": 0.8113364361702128,
+      "val_loss": 0.5638721626955312,
+      "val_accuracy": 0.7762237762237763
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.4669828958650853,
+      "train_accuracy": 0.8173204787234043,
+      "val_loss": 0.5573733298928587,
+      "val_accuracy": 0.7797202797202797
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.4492212914405985,
+      "train_accuracy": 0.8362699468085106,
+      "val_loss": 0.5324017630590425,
+      "val_accuracy": 0.7884615384615384
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.44224182627302533,
+      "train_accuracy": 0.8375997340425532,
+      "val_loss": 0.5292573904657697,
+      "val_accuracy": 0.7867132867132867
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.43362959268245294,
+      "train_accuracy": 0.8409242021276596,
+      "val_loss": 0.5386646010658958,
+      "val_accuracy": 0.7884615384615384
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.42429498218475503,
+      "train_accuracy": 0.8450797872340425,
+      "val_loss": 0.5226589445467595,
+      "val_accuracy": 0.7945804195804196
+    }
+  ],
+  "best_epoch": 6,
+  "best_val_accuracy": 0.7945804195804196,
+  "class_names": [
+    "visible",
+    "partially_occluded",
+    "blocked"
+  ],
+  "device": "cuda",
+  "dataset_path": "data/classifier_context_v7_real_tuned_with_manual_tests",
+  "status": "completed",
+  "hyperparameters": {
+    "epochs": 6,
+    "batch_size": 32,
+    "learning_rate": 3e-05,
+    "image_size": 224,
+    "num_workers": 0
+  }
+}

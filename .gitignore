@@ -8,54 +8,45 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 
-# Modelos y artefactos pesados
+# Pesos y artefactos pesados
 *.pt
 *.pth
 *.onnx
 *.engine
-models/yolo/**
-models/classifier/**
-!models/
-!models/yolo/
-!models/classifier/
-!models/**/.gitkeep
-models/**/*.pt
-models/**/*.pth
-models/**/*.onnx
-models/**/*.engine
+models/**/weights/**
 runs/**
 
-# Datos locales
+# Datasets locales
 *.zip
-data/**/*.jpg
-data/**/*.jpeg
-data/**/*.png
-data/**/*.bmp
-data/**/*.webp
-data/**/*.mp4
-data/**/*.avi
-data/**/*.mov
-data/**/*.txt
-data/**/*.yaml
 data/**/*.cache
 data/yolo/**
 data/classifier/**
 data/classifier_context_v2/**
-data/classifier/train/**
-data/classifier/val/**
-data/classifier/test/**
+data/classifier_context_final_v7/**
+data/raw/**
+!data/
+!data/README.md
+!data/yolo/
 !data/yolo/data.yaml.example
 !data/**/.gitkeep
 
-# Salidas generadas
-outputs/**
+# Salidas temporales de ejecucion
+outputs/crops/**
+outputs/detections/**
+outputs/logs/**
+outputs/reports/**
 !outputs/
-!outputs/**/
-!outputs/**/.gitkeep
+!outputs/crops/
+!outputs/detections/
+!outputs/logs/
+!outputs/reports/
+!outputs/crops/.gitkeep
+!outputs/detections/.gitkeep
+!outputs/logs/.gitkeep
+!outputs/reports/.gitkeep
 
-# Logs y métricas generadas
+# Logs generados
 *.log
-*.metrics.json
 
 # Sistema
 .DS_Store

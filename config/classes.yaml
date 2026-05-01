@@ -1,6 +1,8 @@
+# Clase única del detector YOLO.
 detection:
   0: fire_extinguisher
 
+# Clases de estado usadas por la CNN.
 classification:
   - visible
   - partially_occluded

@@ -1,0 +1,17 @@
+run,correct,detected_evaluable,evaluable,no_detection,accuracy_detected,accuracy_including_no_detection
+manual_validation_real_new_20260430_b_v7_nov_imgsz1536,30,45,50,5,0.666667,0.600000
+manual_validation_real_new_20260430_b_v7_nov_imgsz1664,31,44,50,6,0.704545,0.620000
+manual_validation_real_new_20260430_b_v7_nov_imgsz1792,29,43,50,7,0.674419,0.580000
+manual_validation_real_new_20260430_b_v7_nov_imgsz1920,29,40,50,10,0.725000,0.580000
+manual_validation_real_new_20260430_b_v7_nov_imgsz2048,28,41,50,9,0.682927,0.560000
+manual_validation_real_new_20260430_b_v7_verifier_imgsz1536,29,45,50,5,0.644444,0.580000
+manual_validation_real_new_20260430_b_v7_verifier_imgsz1664,30,44,50,6,0.681818,0.600000
+manual_validation_real_new_20260430_b_v7_verifier_imgsz1792,28,43,50,7,0.651163,0.560000
+manual_validation_real_new_20260430_b_v7_verifier_imgsz1920,28,40,50,10,0.700000,0.560000
+manual_validation_real_new_20260430_b_v7_verifier_imgsz2048,29,41,50,9,0.707317,0.580000
+manual_validation_real_new_20260430_b_v7_nov_imgsz1536_conf0p10,30,45,50,5,0.666667,0.600000
+manual_validation_real_new_20260430_b_v7_nov_imgsz1536_conf0p05,31,46,50,4,0.673913,0.620000
+manual_validation_real_new_20260430_b_v7_nov_imgsz1664_conf0p10,32,47,50,3,0.680851,0.640000
+manual_validation_real_new_20260430_b_v7_nov_imgsz1664_conf0p05,32,47,50,3,0.680851,0.640000
+manual_validation_real_new_20260430_b_v7_nov_imgsz1920_conf0p10,31,44,50,6,0.704545,0.620000
+manual_validation_real_new_20260430_b_v7_nov_imgsz1920_conf0p05,32,45,50,5,0.711111,0.640000

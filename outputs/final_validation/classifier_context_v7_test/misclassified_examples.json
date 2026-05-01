@@ -1,0 +1,302 @@
+[
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/real_full_000_Gemini_Generated_Image_1wk3aq1wk3aq1wk3__r1c2.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.7152070999145508
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/real_full_005_Gemini_Generated_Image_860zp860zp860zp8__r1c2.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.6069943308830261
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/real_full_017_Gemini_Generated_Image_m4mzrgm4mzrgm4mz__r1c1.jpg",
+    "true_class": "visible",
+    "predicted_class": "blocked",
+    "confidence": 0.35013294219970703
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0002_test_0352_jpg_rf_7479fe0731f5410ee1fdab3217d700c0_obj0_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.44681382179260254
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0004_test_0736_jpg_rf_8538e39995241a100dc79470351b56e2_obj0_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.7886524200439453
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0006_test_0352_jpg_rf_7479fe0731f5410ee1fdab3217d700c0_obj1_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.6032574772834778
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0011_test_01246_jpg_rf_1a19f9ffffbbe4c7b2080b97e84c99d2_obj11_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "blocked",
+    "confidence": 0.8280463218688965
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0013_test_1705_jpg_rf_b8320f8c953489ca426d0ce992f54189_obj1_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.6439902186393738
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0015_test_01246_jpg_rf_1a19f9ffffbbe4c7b2080b97e84c99d2_obj26_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "blocked",
+    "confidence": 0.9222784638404846
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0019_test_01246_jpg_rf_1a19f9ffffbbe4c7b2080b97e84c99d2_obj25_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "blocked",
+    "confidence": 0.9404555559158325
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0026_test_42_jpg_rf_fe7965026c9dc95ff8ccbc3555d689c4_obj0_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.7665001153945923
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0031_test_0602_jpg_rf_05d9c7e1386ff86b710f8b10b83e5d82_obj0_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.4291437268257141
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0043_test_2083_jpg_rf_3578aa1b9b4680a2784888aa296c322c_obj1_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.602972686290741
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0048_test_1946_jpg_rf_d2fdf58536e190166f6dcee23abccc8f_obj3_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "blocked",
+    "confidence": 0.6128718256950378
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0054_test_0786_jpg_rf_15454a9895546a8bc194fdc8ed58095e_obj1_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.506359338760376
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0055_test_0848_jpg_rf_e5e6c95b430d2deb5b0210edcc542319_obj0_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.5953208804130554
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0057_test_1725_jpg_rf_fd0c97c1782ad27cd8a5610c7e628fc4_obj1_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.4213356673717499
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0067_test_1946_jpg_rf_d2fdf58536e190166f6dcee23abccc8f_obj2_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.46015170216560364
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0072_test_1819_jpg_rf_4e944f34cd52148f0fc0612824a02383_obj1_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.432273268699646
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0076_test_1980_jpg_rf_481b48cd14eb0b723f0ad3d642f7dbb8_obj1_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.714057445526123
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0079_test_2323_jpg_rf_683dd66a31c9865e0a6ef9325a0a5ecb_obj0_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.42751261591911316
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0082_test_0497_jpg_rf_82138b8a1ab50e6e0fdd299d21190506_obj0_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.5578608512878418
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0088_test_2568_jpg_rf_3259541b28591fefc6f39eaffb10ff02_obj2_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.6050081849098206
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0090_test_2349_jpg_rf_cf944f8f3f5be43843c370938aca6327_obj1_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.5518892407417297
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0127_test_156_jpg_rf_7c9b3e2dd58c36256b9029c0083dabff_obj0_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.5393150448799133
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0129_test_0180_jpg_rf_01503915faf0d6b4df243103f38045bb_obj0_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.4910787343978882
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0132_test_1388_jpg_rf_83274ccb642fcca0ef38fb30f059fadc_obj1_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.8620486855506897
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0146_test_1985_jpg_rf_aaf4c876386b9d4d6cdae8e2df01322f_obj1_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.7733671069145203
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0155_test_2752_jpg_rf_a6b3187c769156186a7b941f160a04e9_obj1_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "blocked",
+    "confidence": 0.46831563115119934
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0158_test_2385_jpg_rf_16f29d7d2066edc958e723aca7b8ab38_obj3_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.553202211856842
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0160_test_1450_jpg_rf_239e00e0f206d21ae29187f3f4a336b4_obj0_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "blocked",
+    "confidence": 0.6317663192749023
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0164_test_1946_jpg_rf_d2fdf58536e190166f6dcee23abccc8f_obj0_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "blocked",
+    "confidence": 0.43381673097610474
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0171_test_1245_jpg_rf_8724bee8b4519b7052c1afcfa6285e29_obj0_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.5480526685714722
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0174_test_1819_jpg_rf_4e944f34cd52148f0fc0612824a02383_obj0_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.6183189749717712
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0177_test_1805_jpg_rf_d40e540a1d4ea122c9623d5d468462c8_obj2_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.6120172739028931
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0183_test_01246_jpg_rf_1a19f9ffffbbe4c7b2080b97e84c99d2_obj5_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "blocked",
+    "confidence": 0.49497053027153015
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0191_test_2667_jpg_rf_555d67514d9fa858f61024457f2e2bba_obj3_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "blocked",
+    "confidence": 0.4772253632545471
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0195_test_0966_jpg_rf_523a2584792fb5b9078a2a9432eb42c2_obj2_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.6183205842971802
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0208_test_2173_jpg_rf_b7163416703ac2f3a3f14eed37cb4571_obj1_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "blocked",
+    "confidence": 0.8542761206626892
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0209_test_0180_jpg_rf_01503915faf0d6b4df243103f38045bb_obj0_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.49586671590805054
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0210_test_01246_jpg_rf_1a19f9ffffbbe4c7b2080b97e84c99d2_obj23_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "blocked",
+    "confidence": 0.8087630271911621
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0211_test_1174_jpg_rf_ff3987e750842cd0da4e85db401ba02f_obj0_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.46435436606407166
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0218_test_2083_jpg_rf_3578aa1b9b4680a2784888aa296c322c_obj0_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.409568727016449
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0220_test_1409_jpg_rf_037d47bfe1684f07b7261d206fa109a6_obj0_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.8311424851417542
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0221_test_2244_jpg_rf_a660e7cd109dae15305291afe4c343ce_obj0_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "blocked",
+    "confidence": 0.46985968947410583
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0223_test_2568_jpg_rf_3259541b28591fefc6f39eaffb10ff02_obj2_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.6154358386993408
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0229_test_1031_jpg_rf_15b6a0729bdf80f37485679ec49f38a0_obj0_visible_0.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.5625479817390442
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/visible/syn_0239_test_8_jpg_rf_4c6ccfa4d26bcc2e5086f0d854ac1dcc_obj0_visible_1.jpg",
+    "true_class": "visible",
+    "predicted_class": "partially_occluded",
+    "confidence": 0.5827014446258545
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/partially_occluded/syn_0003_test_01437_jpg_rf_976c5c86487761145c5dd1d444ae85ae_obj0_partial_0.jpg",
+    "true_class": "partially_occluded",
+    "predicted_class": "visible",
+    "confidence": 0.7456088662147522
+  },
+  {
+    "image_path": "/workspace/data/classifier_context_v7_real_tuned_with_manual_tests/test/partially_occluded/syn_0004_test_2340_jpg_rf_5def0eceaa84950c0d38a778b185e92f_obj6_partial_0.jpg",
+    "true_class": "partially_occluded",
+    "predicted_class": "blocked",
+    "confidence": 0.503769040107727
+  }
+]

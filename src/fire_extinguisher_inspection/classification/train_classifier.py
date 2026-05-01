@@ -27,6 +27,11 @@ def crear_parser() -> argparse.ArgumentParser:
         default="models/classifier/state_classifier.pt",
         help="Ruta donde guardar el mejor modelo.",
     )
+    parser.add_argument(
+        "--initial-model-path",
+        default=None,
+        help="Checkpoint opcional desde el que inicializar la CNN antes de entrenar.",
+    )
     parser.add_argument("--device", default=None, help="Dispositivo opcional: cpu, cuda o cuda:0.")
     parser.add_argument("--num-workers", type=int, default=0, help="Workers para dataloaders.")
     return parser
@@ -169,7 +174,21 @@ def entrenar(args: argparse.Namespace) -> int:
         return 2
 
     device = resolver_dispositivo(args.device)
-    modelo = construir_modelo(num_classes=len(class_names)).to(device)
+    arquitectura = "simple_cnn"
+    checkpoint_inicial = None
+    if args.initial_model_path is not None:
+        ruta_inicial = Path(args.initial_model_path)
+        if not ruta_inicial.exists():
+            logging.error("No existe el checkpoint inicial: %s", ruta_inicial)
+            return 2
+        checkpoint_inicial = torch.load(ruta_inicial, map_location=device)
+        arquitectura = str(checkpoint_inicial.get("architecture", arquitectura))
+
+    modelo = construir_modelo(num_classes=len(class_names), arquitectura=arquitectura).to(device)
+    if checkpoint_inicial is not None:
+        state_dict = checkpoint_inicial.get("model_state_dict", checkpoint_inicial)
+        modelo.load_state_dict(state_dict)
+        logging.info("Modelo inicial cargado desde %s", args.initial_model_path)
     criterio = nn.CrossEntropyLoss()
     optimizador = torch.optim.Adam(modelo.parameters(), lr=args.learning_rate)
 
@@ -230,6 +249,7 @@ def entrenar(args: argparse.Namespace) -> int:
                     "best_val_accuracy": mejor_val_acc,
                     "best_epoch": mejor_epoch,
                     "dataset_path": args.dataset_path,
+                    "initial_model_path": args.initial_model_path,
                 },
                 output_model_path,
             )

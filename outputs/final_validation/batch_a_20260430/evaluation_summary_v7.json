@@ -1,0 +1,163 @@
+{
+  "total_crops": 36,
+  "excluded_no_extinguisher": 2,
+  "evaluated_crops": 34,
+  "detected_evaluated_crops": 31,
+  "no_detection_evaluated_crops": 3,
+  "accuracy_detected_best_detection": 0.6129032258064516,
+  "accuracy_including_no_detection": 0.5588235294117647,
+  "correct_best_detection": 19,
+  "confusion_best_detection": {
+    "visible": {
+      "visible": 10,
+      "partially_occluded": 4,
+      "blocked": 2
+    },
+    "partially_occluded": {
+      "partially_occluded": 8,
+      "visible": 3,
+      "blocked": 2
+    },
+    "blocked": {
+      "blocked": 1,
+      "visible": 1
+    }
+  },
+  "misses": [
+    {
+      "index": 2,
+      "filename": "Gemini_Generated_Image_l0bl9sl0bl9sl0bl__r1c2.jpg",
+      "expected": "visible",
+      "predicted": "partially_occluded",
+      "detections": 1,
+      "detection_confidence": 0.9506394863128662,
+      "status_confidence": 0.5392231941223145
+    },
+    {
+      "index": 5,
+      "filename": "Gemini_Generated_Image_l0bl9sl0bl9sl0bl__r2c1.jpg",
+      "expected": "partially_occluded",
+      "predicted": "visible",
+      "detections": 1,
+      "detection_confidence": 0.9448782205581665,
+      "status_confidence": 0.834843099117279
+    },
+    {
+      "index": 7,
+      "filename": "Gemini_Generated_Image_l0bl9sl0bl9sl0bl__r2c3.jpg",
+      "expected": "blocked",
+      "predicted": "visible",
+      "detections": 1,
+      "detection_confidence": 0.3512619137763977,
+      "status_confidence": 0.9609543681144714
+    },
+    {
+      "index": 8,
+      "filename": "Gemini_Generated_Image_l0bl9sl0bl9sl0bl__r2c4.jpg",
+      "expected": "blocked",
+      "predicted": "NO_DET",
+      "detections": 0,
+      "detection_confidence": 0.0,
+      "status_confidence": 0.0
+    },
+    {
+      "index": 9,
+      "filename": "Gemini_Generated_Image_l0bl9sl0bl9sl0bl__r3c1.jpg",
+      "expected": "partially_occluded",
+      "predicted": "visible",
+      "detections": 1,
+      "detection_confidence": 0.5446329712867737,
+      "status_confidence": 0.9083255529403687
+    },
+    {
+      "index": 12,
+      "filename": "Gemini_Generated_Image_l0bl9sl0bl9sl0bl__r3c4.jpg",
+      "expected": "partially_occluded",
+      "predicted": "visible",
+      "detections": 3,
+      "detection_confidence": 0.7627212405204773,
+      "status_confidence": 0.9812501072883606
+    },
+    {
+      "index": 16,
+      "filename": "Gemini_Generated_Image_puna1dpuna1dpuna__r1c4.jpg",
+      "expected": "visible",
+      "predicted": "partially_occluded",
+      "detections": 1,
+      "detection_confidence": 0.9253392815589905,
+      "status_confidence": 0.47952982783317566
+    },
+    {
+      "index": 17,
+      "filename": "Gemini_Generated_Image_puna1dpuna1dpuna__r2c1.jpg",
+      "expected": "partially_occluded",
+      "predicted": "blocked",
+      "detections": 1,
+      "detection_confidence": 0.4244599938392639,
+      "status_confidence": 0.7796109318733215
+    },
+    {
+      "index": 18,
+      "filename": "Gemini_Generated_Image_puna1dpuna1dpuna__r2c2.jpg",
+      "expected": "visible",
+      "predicted": "partially_occluded",
+      "detections": 2,
+      "detection_confidence": 0.9373977184295654,
+      "status_confidence": 0.5414959192276001
+    },
+    {
+      "index": 20,
+      "filename": "Gemini_Generated_Image_puna1dpuna1dpuna__r2c4.jpg",
+      "expected": "partially_occluded",
+      "predicted": "blocked",
+      "detections": 1,
+      "detection_confidence": 0.9037640690803528,
+      "status_confidence": 0.8505531549453735
+    },
+    {
+      "index": 21,
+      "filename": "Gemini_Generated_Image_puna1dpuna1dpuna__r3c1.jpg",
+      "expected": "visible",
+      "predicted": "partially_occluded",
+      "detections": 1,
+      "detection_confidence": 0.8858126997947693,
+      "status_confidence": 0.8004526495933533
+    },
+    {
+      "index": 26,
+      "filename": "Gemini_Generated_Image_zedo78zedo78zedo__r1c2.jpg",
+      "expected": "visible",
+      "predicted": "NO_DET",
+      "detections": 0,
+      "detection_confidence": 0.0,
+      "status_confidence": 0.0
+    },
+    {
+      "index": 27,
+      "filename": "Gemini_Generated_Image_zedo78zedo78zedo__r1c3.jpg",
+      "expected": "visible",
+      "predicted": "NO_DET",
+      "detections": 0,
+      "detection_confidence": 0.0,
+      "status_confidence": 0.0
+    },
+    {
+      "index": 30,
+      "filename": "Gemini_Generated_Image_zedo78zedo78zedo__r2c2.jpg",
+      "expected": "visible",
+      "predicted": "blocked",
+      "detections": 2,
+      "detection_confidence": 0.6850268840789795,
+      "status_confidence": 0.7267480492591858
+    },
+    {
+      "index": 36,
+      "filename": "Gemini_Generated_Image_zedo78zedo78zedo__r3c4.jpg",
+      "expected": "visible",
+      "predicted": "blocked",
+      "detections": 1,
+      "detection_confidence": 0.9603092074394226,
+      "status_confidence": 0.4298940598964691
+    }
+  ]
+}

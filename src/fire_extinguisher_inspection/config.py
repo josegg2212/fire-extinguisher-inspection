@@ -26,6 +26,7 @@ class ModelosConfig:
     yolo: Path
     yolo_base: str
     cnn: Path
+    visibility_verifier: Path | None
 
 
 @dataclass(frozen=True)
@@ -52,11 +53,17 @@ class InferenciaConfig:
     """Parámetros de inferencia."""
 
     detection_confidence_threshold: float
+    yolo_imgsz: int | None
     classification_confidence_threshold: float
     cnn_image_size: int
     crop_margin: float
     classifier_context_padding: float
     classifier_square_crop: bool
+    blocked_to_partial_margin: float
+    blocked_to_partial_min_probability: float
+    visibility_verifier_min_visible_probability: float
+    visibility_verifier_primary_min_visible_probability: float
+    visibility_verifier_primary_max_blocked_probability: float
     guardar_crops: bool
     guardar_anotada: bool
 
@@ -101,6 +108,14 @@ def resolver_ruta(ruta: str | Path, base: Path = RAIZ_PROYECTO) -> Path:
     return (base / ruta_path).resolve()
 
 
+def resolver_ruta_opcional(ruta: str | Path | None, base: Path = RAIZ_PROYECTO) -> Path | None:
+    """Convierte rutas opcionales del YAML, dejando null o cadena vacia como None."""
+
+    if ruta in (None, ""):
+        return None
+    return resolver_ruta(ruta, base)
+
+
 def _leer_yaml(ruta: Path) -> dict[str, Any]:
     if not ruta.exists():
         raise FileNotFoundError(f"No existe el archivo de configuración: {ruta}")
@@ -117,6 +132,12 @@ def _convertir_clases_detection(datos: Any) -> dict[int, str]:
     if not isinstance(datos, dict):
         raise ValueError("La clave 'detection' de classes.yaml debe ser un diccionario.")
     return {int(indice): str(nombre) for indice, nombre in datos.items()}
+
+
+def _entero_opcional(valor: Any, defecto: int | None = None) -> int | None:
+    if valor is None:
+        return defecto
+    return int(valor)
 
 
 def cargar_configuracion(
@@ -151,6 +172,7 @@ def cargar_configuracion(
             yolo=resolver_ruta(modelos["yolo"]),
             yolo_base=str(modelos.get("yolo_base", "yolo26n.pt")),
             cnn=resolver_ruta(modelos["cnn"]),
+            visibility_verifier=resolver_ruta_opcional(modelos.get("visibility_verifier")),
         ),
         datasets=DatasetsConfig(
             yolo_root=resolver_ruta(datasets["yolo_root"]),
@@ -165,11 +187,23 @@ def cargar_configuracion(
         ),
         inferencia=InferenciaConfig(
             detection_confidence_threshold=float(inferencia["detection_confidence_threshold"]),
+            yolo_imgsz=_entero_opcional(inferencia.get("yolo_imgsz"), 640),
             classification_confidence_threshold=float(inferencia["classification_confidence_threshold"]),
             cnn_image_size=int(inferencia["cnn_image_size"]),
             crop_margin=float(inferencia["crop_margin"]),
             classifier_context_padding=float(inferencia.get("classifier_context_padding", 0.75)),
             classifier_square_crop=bool(inferencia.get("classifier_square_crop", True)),
+            blocked_to_partial_margin=float(inferencia.get("blocked_to_partial_margin", 0.0)),
+            blocked_to_partial_min_probability=float(inferencia.get("blocked_to_partial_min_probability", 1.0)),
+            visibility_verifier_min_visible_probability=float(
+                inferencia.get("visibility_verifier_min_visible_probability", 1.0)
+            ),
+            visibility_verifier_primary_min_visible_probability=float(
+                inferencia.get("visibility_verifier_primary_min_visible_probability", 1.0)
+            ),
+            visibility_verifier_primary_max_blocked_probability=float(
+                inferencia.get("visibility_verifier_primary_max_blocked_probability", 0.0)
+            ),
             guardar_crops=bool(inferencia["guardar_crops"]),
             guardar_anotada=bool(inferencia["guardar_anotada"]),
         ),

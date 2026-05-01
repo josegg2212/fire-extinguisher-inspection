@@ -1,763 +1,398 @@
-# Inspección visual automática de extintores
+# Inspección visual de extintores
 
-Sistema base para detectar extintores en imágenes o vídeo con YOLO y clasificar su estado visual con una CNN en tres clases:
+Este proyecto implementa un sistema de inspección visual de extintores. El objetivo es localizar extintores en imágenes y clasificar su estado de accesibilidad en tres clases:
 
 - `visible`
 - `partially_occluded`
 - `blocked`
 
-El proyecto está preparado para desarrollarse aunque todavía no existan pesos entrenados. El dataset YOLO puede prepararse localmente en `data/yolo/`, pero no se versiona en Git; el dataset del clasificador CNN y los entrenamientos reales siguen pendientes.
+La solución final combina un detector YOLO para encontrar el extintor y una CNN para clasificar el estado del recorte contextual. El proyecto no se plantea como una prueba aislada, sino como un flujo completo: preparación de datos, entrenamiento, validación, pruebas manuales y uso final mediante consola o API.
 
-## Arquitectura
+## Importancia práctica
 
-El flujo sigue la versión equilibrada definida en el documento del proyecto:
+Un extintor visible y accesible es un elemento crítico de seguridad. En edificios, naves industriales, aparcamientos, colegios, hospitales, comercios o almacenes, una inspección automática puede ayudar a detectar situaciones que normalmente se revisarían de forma manual y repetitiva.
 
-1. Leer imagen o frame de vídeo.
-2. Detectar extintores con YOLO usando una única clase de detección: `fire_extinguisher`.
-3. Generar para la CNN un crop contextual ampliado alrededor de cada bbox YOLO.
-4. Clasificar ese crop contextual en `visible`, `partially_occluded` o `blocked`.
-5. Devolver una salida estructurada y, opcionalmente, una imagen anotada.
+Este sistema puede servir como base para:
 
-La estructura se inspira en el repositorio `inspeccion_inteligente`, manteniendo separación entre API, lógica de inferencia, modelos, outputs y scripts, pero evitando una API monolítica.
+- inspección preventiva de zonas con muchos extintores;
+- revisión periódica mediante cámaras fijas;
+- integración en un robot inspector que recorra instalaciones;
+- generación de evidencias visuales para mantenimiento;
+- detección temprana de extintores tapados por cajas, muebles u otros objetos;
+- apoyo a auditorías internas de seguridad.
 
-## Estructura
+El sistema no sustituye una revisión normativa completa, pero puede reducir trabajo manual y señalar casos que requieren atención.
+
+## Funcionamiento general
+
+El pipeline sigue estos pasos:
+
+1. Recibe una imagen.
+2. YOLO detecta las cajas donde aparecen extintores.
+3. Cada caja se amplía para conservar contexto alrededor del extintor.
+4. La CNN clasifica el recorte contextual.
+5. Se devuelve un JSON con las detecciones, las probabilidades y, si se solicita, una imagen anotada.
+
+La configuración final está en `config/default.yaml`.
+
+## Fundamento técnico
+
+El sistema se separó en dos modelos porque son problemas distintos. YOLO localiza cada extintor en la imagen y la CNN clasifica el estado del recorte resultante. Esta división permite trabajar con imágenes que contienen varios extintores y evita clasificar la escena completa como si solo hubiera un objeto.
+
+Se usó `yolo26n.pt` como base del detector porque es una variante ligera, adecuada para una sola clase y viable en la GPU local. El dataset de detección se preparó en formato YOLO/Roboflow con cajas para la clase `fire_extinguisher`.
+
+La CNN de estado recibe crops RGB de `224x224`. Está formada por bloques `Conv2d + BatchNorm + ReLU + MaxPool`, una agregación final con `AdaptiveAvgPool` y capas densas con `Dropout`. La salida tiene tres clases: `visible`, `partially_occluded` y `blocked`.
+
+El detalle técnico completo está en `docs/15_fundamento_tecnico.md`.
+
+## Estructura del repositorio
 
 ```text
 fire-extinguisher-inspection/
-├── config/                         # Configuración YAML
-├── data/                           # Datos locales no versionados
-│   ├── raw/
-│   ├── yolo/
-│   ├── classifier/                 # v1 historica, crops ajustados
-│   └── classifier_context_v2/       # v2 recomendada, crops contextuales
-├── models/                         # Pesos YOLO y CNN no versionados
-├── outputs/                        # Salidas de inferencia, crops, informes y logs
+├── config/
+├── data/
+├── demo/
+├── docs/
+├── docker/
+├── models/
+├── outputs/
+├── scripts/
 ├── src/fire_extinguisher_inspection/
-│   ├── detection/                  # Detector YOLO y entrenamiento
-│   ├── classification/             # CNN, dataset, entrenamiento y predicción
-│   ├── pipeline/                   # Orquestación extremo a extremo
-│   ├── preprocessing/              # Recortes y utilidades de imagen
-│   ├── visualization/              # Dibujo de resultados
-│   └── api/                        # FastAPI
-├── scripts/                        # Puntos de entrada de uso práctico
-├── tests/                          # Tests mínimos
-└── docker/                         # Ejecución en contenedor
+└── tests/
 ```
 
-## Instalación local
+## Qué contiene cada carpeta
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-export PYTHONPATH="$PWD/src"
-```
+`config/`
 
-Smoke test sin modelos entrenados:
+Contiene la configuración principal del proyecto. `default.yaml` fija las rutas de modelos, datasets, umbrales y parámetros de inferencia. `classes.yaml` define las clases de detección y clasificación.
 
-```bash
-python3 scripts/smoke_test.py
-```
+`data/`
 
-Tests mínimos:
+Contiene los datasets locales. No se suben a Git porque son pesados.
 
-```bash
-PYTHONPATH=src python3 -m unittest discover -s tests
-```
+- `data/yolo/`: dataset usado para entrenar y evaluar el detector YOLO.
+- `data/classifier_context_final_v7/`: dataset final de la CNN, materializado sin enlaces simbólicos.
+- `data/raw/`: carpeta sencilla para dejar imágenes nuevas de prueba.
 
-Informe de verificación inicial:
+`demo/`
+
+Contiene las imágenes seleccionadas para enseñar el funcionamiento final del sistema. La demo está organizada por clase:
 
 ```text
-docs/verificacion_inicial.md
+demo/imagenes/
+├── blocked/
+├── partially_occluded/
+└── visible/
 ```
 
-El informe recoge las comprobaciones realizadas antes de pasar a la fase de datasets. Desde entonces puede existir un dataset YOLO local en `data/yolo/`, pero sigue sin versionarse.
+Las imágenes de esta carpeta deben ser ejemplos revisados manualmente para enseñar el funcionamiento del sistema.
 
-## Configuración
+La selección actual contiene 27 imágenes verificadas con la configuración final:
 
-La configuración principal está en `config/default.yaml` y las clases en `config/classes.yaml`.
+- 7 `visible`;
+- 12 `partially_occluded`;
+- 8 `blocked`.
 
-Rutas importantes por defecto:
+`docs/`
 
-- YOLO: `models/yolo/extinguisher_yolo.pt`
-- modelo base recomendado para entrenamiento YOLO: `yolo26n.pt`
-- fallback compatible si YOLO26 da problemas en el entorno: `yolo11n.pt`
-- CNN: `models/classifier/state_classifier.pt`
-- dataset YOLO: `data/yolo/data.yaml`
-- dataset CNN v1 historico: `data/classifier`
-- dataset CNN contextual recomendado: `data/classifier_context_v2`
-- salidas: `outputs/`
+Contiene la memoria del desarrollo. Los documentos están numerados para poder leer el proyecto como una secuencia:
 
-Estas rutas son convenciones de trabajo. Si los modelos o datasets aún no existen, el código devuelve errores o avisos claros.
+- preparación inicial;
+- dataset YOLO;
+- entrenamiento YOLO;
+- dataset CNN;
+- entrenamiento CNN;
+- evaluación del pipeline;
+- pruebas manuales;
+- fundamento técnico;
+- cierre final.
 
-## Dataset YOLO
+El índice está en `docs/00_indice.md`.
 
-La clase de detección esperada es:
+`models/`
+
+Contiene las rutas locales de los modelos y los resultados ligeros de entrenamiento. Los pesos `.pt` no se versionan en Git, pero estas son las rutas esperadas para ejecutar el proyecto:
+
+- YOLO final: `models/yolo/extinguisher_yolo_v1/weights/best.pt`
+- CNN final: `models/classifier/state_classifier_context_v7_real_tuned_with_manual_tests.pt`
+- Peso base YOLO local: `models/yolo/base/yolo26n.pt`
+
+`outputs/`
+
+Contiene salidas generadas. La parte importante que se conserva es:
+
+- `outputs/final_validation/`: validaciones finales, labels manuales, resúmenes y contact sheets.
+
+Las carpetas `outputs/detections`, `outputs/reports`, `outputs/crops` y `outputs/logs` quedan preparadas para nuevas ejecuciones.
+
+`scripts/`
+
+Contiene solo los comandos necesarios para usar y comprobar el proyecto final. El detalle está en `scripts/README.md`.
+
+`src/fire_extinguisher_inspection/`
+
+Contiene el código principal del sistema:
+
+- `detection/`: entrenamiento y uso de YOLO;
+- `classification/`: modelo CNN, dataset y predicción;
+- `preprocessing/`: recortes y preparación de imágenes;
+- `pipeline/`: unión de YOLO y CNN;
+- `visualization/`: dibujo de resultados;
+- `api/`: servicio FastAPI.
+
+`tests/`
+
+Contiene pruebas automáticas de configuración, API, dataset y comportamiento básico del pipeline.
+
+## Desarrollo del proyecto
+
+El proyecto avanzó en varias fases.
+
+Primero se preparó el repositorio, la configuración y la estructura de datos. Después se revisó el dataset YOLO, se corrigieron rutas y se entrenó un detector de extintores. Ese detector funcionó razonablemente bien en las pruebas posteriores.
+
+La primera CNN usaba recortes demasiado ajustados al extintor. Esto permitía entrenar, pero no daba suficiente contexto para distinguir entre un extintor visible y uno parcialmente tapado. Por eso se generó un dataset contextual, donde cada recorte conserva parte del entorno.
+
+Más adelante se hicieron pruebas manuales con imágenes más cercanas a un caso real. Ahí se observó que el problema principal no era el detector, sino la separación entre `visible` y `partially_occluded`. Se ajustó la CNN con datos más variados y se conservaron las validaciones finales.
+
+La decisión final fue dejar una configuración estable, sin seguir aumentando complejidad:
+
+- YOLO final;
+- CNN contextual v7;
+- sin verificador auxiliar;
+- inferencia con `yolo_imgsz=1920`;
+- umbral YOLO `0.05`.
+
+## Modelos finales
+
+Rutas por defecto:
 
 ```yaml
-names:
-  - fire_extinguisher
+modelos:
+  yolo: models/yolo/extinguisher_yolo_v1/weights/best.pt
+  yolo_base: models/yolo/base/yolo26n.pt
+  cnn: models/classifier/state_classifier_context_v7_real_tuned_with_manual_tests.pt
+  visibility_verifier: null
 ```
 
-Hay un ejemplo en `data/yolo/data.yaml.example`. El dataset real y `data/yolo/data.yaml` están ignorados por Git para evitar subir imágenes, labels y rutas locales.
+Parámetros principales:
 
-Estructura final esperada:
+```yaml
+inferencia:
+  detection_confidence_threshold: 0.05
+  yolo_imgsz: 1920
+  cnn_image_size: 224
+  classifier_context_padding: 0.75
+```
+
+## Resultados conservados
+
+La evidencia final está en `outputs/final_validation/`.
+
+Resumen:
+
+- test interno CNN: accuracy `0.7280` sobre `783` muestras;
+- validación manual A: `23/32 = 0.7188`;
+- validación manual B con configuración final: `32/45 = 0.7111` sobre detecciones;
+- agregado de los dos últimos lotes limpios: `53/77 = 0.6883` sobre detecciones.
+
+El detalle está en `docs/14_cierre_final.md`.
+
+## Ejecutar la demo
+
+La demo se ejecuta con las imágenes de:
 
 ```text
-data/yolo/
-├── train/
-│   ├── images/
-│   └── labels/
-├── valid/
-│   ├── images/
-│   └── labels/
-├── test/
-│   ├── images/
-│   └── labels/
-└── data.yaml
+demo/imagenes/
+├── blocked/
+├── partially_occluded/
+└── visible/
 ```
 
-Si recibes un ZIP de Roboflow, colócalo temporalmente en `fire-extinguisher-inspection-docs/`, extráelo primero en `data/raw/extracted_yolo_dataset_tmp/`, revisa su estructura y copia solo los splits YOLO finales a `data/yolo/`. No mezcles contenido desconocido directamente en `data/yolo/`.
-
-Comprobar estructura:
-
-```bash
-PYTHONPATH=src python3 scripts/check_dataset_structure.py --tipo yolo --path data/yolo/data.yaml
-```
-
-Generar una contact sheet para revisar cajas de forma visual:
-
-```bash
-PYTHONPATH=src python3 scripts/visualize_yolo_dataset_samples.py \
-  --data-yaml data/yolo/data.yaml \
-  --output outputs/reports/contact_sheet_yolo_dataset.jpg \
-  --num-samples 16
-```
-
-## Verificación previa al entrenamiento YOLO
-
-Antes de entrenar conviene validar de nuevo el dataset:
-
-```bash
-PYTHONPATH=src python3 scripts/check_dataset_structure.py --tipo yolo --path data/yolo/data.yaml
-```
-
-Revisar labels vacíos:
-
-```bash
-PYTHONPATH=src python3 scripts/visualize_empty_yolo_labels.py \
-  --data-yaml data/yolo/data.yaml \
-  --output outputs/reports/empty_labels_contact_sheet.jpg \
-  --report docs/empty_labels_review.md
-```
-
-Si el Python local no tiene Pillow, usa el contenedor:
-
-```bash
-docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app \
-  python3 scripts/visualize_empty_yolo_labels.py \
-  --data-yaml data/yolo/data.yaml \
-  --output outputs/reports/empty_labels_contact_sheet.jpg \
-  --report docs/empty_labels_review.md
-```
-
-Entrenamiento corto de prueba, solo después de corregir o aceptar explícitamente los labels vacíos:
-
-```bash
-PYTHONPATH=src python3 -m fire_extinguisher_inspection.detection.train_yolo \
-  --data data/yolo/data.yaml \
-  --model yolo26n.pt \
-  --epochs 3 \
-  --imgsz 640 \
-  --batch 16 \
-  --workers 0 \
-  --project models/yolo \
-  --name extinguisher_yolo_test \
-  --device 0
-```
-
-El script genera una copia temporal del YAML en `outputs/logs/` con la ruta del dataset resuelta para Ultralytics. Esto evita problemas con `path: .` cuando se lanza desde Docker o desde la raíz del repositorio.
-
-Si el Python local no tiene Ultralytics instalado, se puede usar Docker. Para CPU:
-
-```bash
-docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app \
-  python3 -m fire_extinguisher_inspection.detection.train_yolo \
-  --data data/yolo/data.yaml \
-  --model yolo26n.pt \
-  --epochs 3 \
-  --imgsz 640 \
-  --batch 16 \
-  --workers 0 \
-  --project models/yolo \
-  --name extinguisher_yolo_test
-```
-
-Para GPU, el Compose incluye el servicio `app-gpu`, que instala PyTorch con CUDA y expone la GPU del host:
-
-```bash
-docker compose -f docker/docker-compose.yml build app-gpu
-docker compose -f docker/docker-compose.yml run --rm --no-deps app-gpu \
-  python3 -m fire_extinguisher_inspection.detection.train_yolo \
-  --data data/yolo/data.yaml \
-  --model yolo26n.pt \
-  --epochs 3 \
-  --imgsz 640 \
-  --batch 16 \
-  --workers 0 \
-  --project models/yolo \
-  --name extinguisher_yolo_test_gpu \
-  --device 0
-```
-
-En una GTX 1650 se verificó un entrenamiento corto de 3 épocas con YOLO26. Ultralytics desactivó AMP automáticamente, pero el entrenamiento terminó y guardó resultados en `models/yolo/extinguisher_yolo_test_gpu/`. Esos pesos y salidas están ignorados por Git.
-
-Fallback si YOLO26 no está disponible en la versión instalada de Ultralytics:
-
-```bash
-PYTHONPATH=src python3 -m fire_extinguisher_inspection.detection.train_yolo \
-  --data data/yolo/data.yaml \
-  --model yolo11n.pt \
-  --epochs 3 \
-  --imgsz 640 \
-  --batch 16 \
-  --workers 0 \
-  --project models/yolo \
-  --name extinguisher_yolo11_test \
-  --device 0
-```
-
-## Entrenamiento YOLO v1
-
-Esta fase entrena el primer detector YOLO serio de extintores. No entrena la CNN ni modifica los datasets de clasificación.
-
-Validar el dataset YOLO antes de entrenar:
+Ejecutarla desde terminal:
 
 ```bash
 docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app-gpu \
-  python3 scripts/check_dataset_structure.py \
-  --tipo yolo \
-  --path data/yolo/data.yaml
-```
-
-Entrenar 50 épocas en Docker GPU:
-
-```bash
-docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app-gpu \
-  python3 -m fire_extinguisher_inspection.detection.train_yolo \
-  --data data/yolo/data.yaml \
-  --model yolo26n.pt \
-  --epochs 50 \
-  --imgsz 640 \
-  --batch 16 \
-  --workers 0 \
-  --project models/yolo \
-  --name extinguisher_yolo_v1
-```
-
-El script valida que el YAML exista antes de entrenar y no espera en bucle a que aparezcan datos. `--model` acepta cualquier modelo válido de Ultralytics; se recomienda empezar con `yolo26n.pt` y usar `yolo11n.pt` como fallback de compatibilidad si el entorno todavía no soporta YOLO26:
-
-```bash
-docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app-gpu \
-  python3 -m fire_extinguisher_inspection.detection.train_yolo \
-  --data data/yolo/data.yaml \
-  --model yolo11n.pt \
-  --epochs 50 \
-  --imgsz 640 \
-  --batch 16 \
-  --workers 0 \
-  --project models/yolo \
-  --name extinguisher_yolo_v1
-```
-
-Evaluar el mejor peso en el split `test`:
-
-```bash
-docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app-gpu \
-  python3 scripts/evaluate_yolo_on_test.py \
-  --model models/yolo/extinguisher_yolo_v1/weights/best.pt \
-  --data data/yolo/data.yaml \
-  --split test \
-  --imgsz 640 \
-  --output-dir outputs/reports/yolo_v1_test \
-  --device 0 \
-  --batch 8 \
-  --workers 0
-```
-
-Ruta esperada del mejor modelo:
-
-```text
-models/yolo/extinguisher_yolo_v1/weights/best.pt
-```
-
-Los pesos, logs, datasets, outputs e imágenes generadas son artefactos locales y no se versionan en Git. El informe del entrenamiento queda en `docs/yolo_v1_training.md`.
-
-Siguiente paso tras revisar resultados: probar el pipeline completo con `models/yolo/extinguisher_yolo_v1/weights/best.pt` y la CNN contextual v2.
-
-## Dataset CNN
-
-La CNN de estado trabaja con crops de extintores en formato `ImageFolder` y tres clases:
-
-- `visible`
-- `partially_occluded`
-- `blocked`
-
-La v1 en `data/classifier/` queda como historico de validacion del flujo. Para el siguiente entrenamiento se recomienda usar la v2 contextual en `data/classifier_context_v2/`, porque conserva entorno alrededor del extintor.
-
-Estructura v1:
-
-```text
-data/classifier/
-├── train/
-│   ├── visible/
-│   ├── partially_occluded/
-│   └── blocked/
-├── val/
-│   ├── visible/
-│   ├── partially_occluded/
-│   └── blocked/
-└── test/
-    ├── visible/
-    ├── partially_occluded/
-    └── blocked/
-```
-
-### Generación del dataset de clasificación de estado
-
-El dataset inicial se puede generar desde las anotaciones YOLO ya revisadas. El script recorta cada bbox real como `visible` y crea variantes semi-sintéticas para `partially_occluded` y `blocked`, manteniendo siempre separados los splits de origen: YOLO `train` va a classifier `train`, YOLO `valid`/`val` va a classifier `val` y YOLO `test` va a classifier `test`.
-
-Generación limitada para prueba:
-
-```bash
-PYTHONPATH=src python3 scripts/generate_classifier_dataset_from_yolo.py \
-  --data-yaml data/yolo/data.yaml \
-  --output-dir data/classifier \
-  --max-per-split 20 \
-  --partial-occlusions-per-object 1 \
-  --blocked-occlusions-per-object 1 \
-  --image-size 224 \
-  --overwrite
-```
-
-Generación completa, cuando la prueba visual sea satisfactoria:
-
-```bash
-PYTHONPATH=src python3 scripts/generate_classifier_dataset_from_yolo.py \
-  --data-yaml data/yolo/data.yaml \
-  --output-dir data/classifier \
-  --partial-occlusions-per-object 1 \
-  --blocked-occlusions-per-object 1 \
-  --visible-crops-per-object 1 \
-  --image-size 224 \
-  --overwrite
-```
-
-En la generación completa v1 se obtuvieron 28.797 crops: 21.909 en `train`, 4.656 en `val` y 2.232 en `test`. La diferencia respecto a las 29.052 imágenes esperadas viene de 85 anotaciones descartadas por crop menor que `--min-crop-size 32`; los 12 labels vacíos de `train` ya estaban documentados.
-
-Los crops generados son datos locales y no deben subirse a Git. `data/classifier/train/`, `data/classifier/val/`, `data/classifier/test/` y `outputs/` están ignorados, salvo los `.gitkeep`.
-
-Validar estructura e imágenes:
-
-```bash
-PYTHONPATH=src python3 scripts/check_classifier_dataset_structure.py \
-  --dataset-dir data/classifier
-```
-
-Generar contact sheets para revisión visual:
-
-```bash
-PYTHONPATH=src python3 scripts/visualize_classifier_dataset_samples.py \
-  --dataset-dir data/classifier \
-  --split train \
-  --output outputs/reports/contact_sheet_classifier_train_full.jpg \
-  --num-samples-per-class 10
-
-PYTHONPATH=src python3 scripts/visualize_classifier_dataset_samples.py \
-  --dataset-dir data/classifier \
-  --split val \
-  --output outputs/reports/contact_sheet_classifier_val_full.jpg \
-  --num-samples-per-class 10
-
-PYTHONPATH=src python3 scripts/visualize_classifier_dataset_samples.py \
-  --dataset-dir data/classifier \
-  --split test \
-  --output outputs/reports/contact_sheet_classifier_test_full.jpg \
-  --num-samples-per-class 10
-```
-
-Las clases `partially_occluded` y `blocked` son semi-sintéticas en esta primera versión. Antes de entrenar la CNN, revisa las contact sheets y descarta o ajusta el generador si las oclusiones no resultan útiles.
-
-Comprobar estructura con el validador general:
-
-```bash
-PYTHONPATH=src python3 scripts/check_dataset_structure.py --tipo classifier --path data/classifier
-```
-
-### Generación del dataset CNN contextual v2
-
-La v2 corrige la falta de contexto detectada en la evaluación preliminar del pipeline. En vez de recortar solo el bbox ajustado, genera una región ampliada con `--context-padding 0.75` y `--square-crop`.
-
-Prueba limitada:
-
-```bash
-PYTHONPATH=src python3 scripts/generate_classifier_context_dataset_from_yolo.py \
-  --data-yaml data/yolo/data.yaml \
-  --output-dir data/classifier_context_v2 \
-  --max-per-split 20 \
-  --context-padding 0.75 \
-  --partial-occlusions-per-object 1 \
-  --blocked-occlusions-per-object 1 \
-  --visible-crops-per-object 1 \
-  --image-size 224 \
-  --square-crop \
-  --overwrite
-```
-
-Generación completa:
-
-```bash
-PYTHONPATH=src python3 scripts/generate_classifier_context_dataset_from_yolo.py \
-  --data-yaml data/yolo/data.yaml \
-  --output-dir data/classifier_context_v2 \
-  --context-padding 0.75 \
-  --partial-occlusions-per-object 1 \
-  --blocked-occlusions-per-object 1 \
-  --visible-crops-per-object 1 \
-  --image-size 224 \
-  --square-crop \
-  --overwrite
-```
-
-La generación completa v2 produjo 29.052 crops equilibrados: 22.065 en `train`, 4.698 en `val` y 2.289 en `test`.
-
-Validar:
-
-```bash
-PYTHONPATH=src python3 scripts/check_classifier_dataset_structure.py \
-  --dataset-dir data/classifier_context_v2
-```
-
-Contact sheets:
-
-```bash
-PYTHONPATH=src python3 scripts/visualize_classifier_dataset_samples.py \
-  --dataset-dir data/classifier_context_v2 \
-  --split train \
-  --output outputs/reports/contact_sheet_classifier_context_v2_train.jpg \
-  --num-samples-per-class 10
-```
-
-Repite cambiando `--split val` y `--split test`. `data/classifier_context_v2/` y `outputs/` no se versionan.
-
-## Entrenamiento corto de prueba de la CNN
-
-Antes de entrenar el modelo definitivo, se valido el pipeline con 5 épocas usando la v1 (`data/classifier/`). Esa prueba queda documentada como historica; la siguiente baseline debe usar `data/classifier_context_v2/`. En el entorno Docker GPU:
-
-```bash
-docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app-gpu \
-  python3 scripts/check_classifier_dataset_structure.py \
-  --dataset-dir data/classifier
-```
-
-Entrenamiento corto:
-
-```bash
-docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app-gpu \
-  python3 -m fire_extinguisher_inspection.classification.train_classifier \
-  --dataset-path data/classifier \
-  --epochs 5 \
-  --batch-size 32 \
-  --learning-rate 0.001 \
-  --image-size 224 \
-  --output-model-path models/classifier/extinguisher_status_cnn_test.pth
-```
-
-La salida esperada es un checkpoint local en `models/classifier/extinguisher_status_cnn_test.pth` y métricas en `models/classifier/extinguisher_status_cnn_test.metrics.json`. Ambos archivos están ignorados por Git. Esta prueba queda como histórico de v1.
-
-## Entrenamiento de la CNN contextual v2
-
-La baseline recomendada usa `data/classifier_context_v2` porque conserva contexto alrededor del extintor y está alineada con el pipeline de inferencia.
-
-Validar dataset:
-
-```bash
-PYTHONPATH=src python3 scripts/check_classifier_dataset_structure.py \
-  --dataset-dir data/classifier_context_v2
-```
-
-Entrenar:
-
-```bash
-docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app-gpu \
-  python3 -m fire_extinguisher_inspection.classification.train_classifier \
-  --dataset-path data/classifier_context_v2 \
-  --epochs 30 \
-  --batch-size 32 \
-  --learning-rate 0.001 \
-  --image-size 224 \
-  --output-model-path models/classifier/state_classifier_context_v2.pt
-```
-
-El entrenamiento usa `train/val`, guarda el mejor modelo por accuracy de validación y escribe métricas por época en `models/classifier/state_classifier_context_v2.metrics.json`. Los pesos y métricas locales no se versionan.
-
-Evaluar en test:
-
-```bash
-docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app-gpu \
-  python3 scripts/evaluate_classifier_on_test.py \
-  --dataset-dir data/classifier_context_v2/test \
-  --model-path models/classifier/state_classifier_context_v2.pt \
-  --image-size 224 \
-  --output-dir outputs/reports/classifier_context_v2_test
-```
-
-Resultado de la baseline contextual v2 entrenada: mejor época 27, `val_accuracy=0.8842`, `test_accuracy=0.8755`. No son métricas finales del sistema completo: `partially_occluded` y `blocked` siguen siendo clases semi-sintéticas. El siguiente paso es probar el pipeline completo con YOLO + CNN contextual v2.
-
-## Evaluación preliminar del pipeline completo
-
-Esta fase usa modelos de prueba y no representa resultados finales. Sirve para validar que YOLO, crops contextuales, CNN, JSON e imágenes anotadas funcionan juntos antes de entrenar modelos definitivos.
-
-Evaluar preliminarmente la CNN en `data/classifier/test`:
-
-```bash
-docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app-gpu \
-  python3 scripts/evaluate_classifier_on_test.py \
-  --dataset-dir data/classifier/test \
-  --model-path models/classifier/extinguisher_status_cnn_test.pth \
-  --image-size 224 \
-  --output-dir outputs/reports/classifier_test_preliminary
-```
-
-Evaluar preliminarmente YOLO en el split `test`:
-
-```bash
-docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app-gpu \
-  python3 scripts/evaluate_yolo_on_test.py \
-  --model models/yolo/extinguisher_yolo_test_gpu/weights/best.pt \
-  --data data/yolo/data.yaml \
-  --split test \
-  --imgsz 640 \
-  --output-dir outputs/reports/yolo_test_preliminary \
-  --device 0 \
-  --batch 8 \
-  --workers 0
-```
-
-Ejecutar el pipeline completo sobre imágenes de test:
-
-```bash
-docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app-gpu \
-  python3 scripts/run_preliminary_pipeline_evaluation.py \
-  --images-dir data/yolo/test/images \
-  --yolo-model models/yolo/extinguisher_yolo_test_gpu/weights/best.pt \
-  --classifier-model models/classifier/extinguisher_status_cnn_test.pth \
-  --output-dir outputs/detections/preliminary_pipeline \
-  --max-images 30 \
-  --confidence-threshold 0.25 \
-  --save-crops \
-  --save-json \
-  --image-size 224 \
-  --classifier-context-padding 0.75 \
-  --classifier-square-crop
-```
-
-Prueba preliminar balanceada con 10 ejemplos por clase desde `data/classifier/test`:
-
-```bash
-docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app-gpu \
-  python3 scripts/run_preliminary_pipeline_evaluation.py \
-  --images-dir data/classifier/test \
-  --yolo-model models/yolo/extinguisher_yolo_test_gpu/weights/best.pt \
-  --classifier-model models/classifier/extinguisher_status_cnn_test.pth \
-  --output-dir outputs/detections/preliminary_pipeline_balanced_classifier \
-  --max-images 30 \
+  python3 scripts/evaluar_pipeline.py \
+  --images-dir demo/imagenes \
+  --output-dir outputs/detections/demo \
   --max-images-per-class 10 \
-  --confidence-threshold 0.25 \
-  --save-crops \
-  --save-json \
-  --image-size 224 \
-  --classifier-context-padding 0.75 \
-  --classifier-square-crop \
-  --contact-sheet-output outputs/reports/preliminary_pipeline_balanced_contact_sheet.jpg
+  --save-json
 ```
 
-Las salidas se guardan en `outputs/reports/classifier_test_preliminary/`, `outputs/reports/yolo_test_preliminary/`, `outputs/detections/preliminary_pipeline/`, `outputs/detections/preliminary_pipeline_balanced_classifier/` y sus contact sheets en `outputs/reports/`. Los outputs, modelos y datasets reales están ignorados por Git.
+Los resultados se guardan en:
 
-## Pipeline integrado YOLO v1 + CNN contextual v2
+```text
+outputs/detections/demo/
+├── annotated/
+├── json/
+└── resumen_pipeline.json
+```
 
-El pipeline integrado v1 usa:
+Con la selección actual, la demo queda verificada con `27/27` imágenes clasificadas correctamente.
 
-- YOLO v1: `models/yolo/extinguisher_yolo_v1/weights/best.pt`
-- CNN contextual v2: `models/classifier/state_classifier_context_v2.pt`
-
-La bbox original de YOLO se conserva para visualizacion y JSON. Para clasificar el estado, el pipeline amplia esa bbox con `classifier_context_padding=0.75`, genera un crop contextual cuadrado y pasa ese crop a la CNN contextual v2. Esto mantiene el contexto usado durante el entrenamiento de la CNN.
-
-Evaluacion sobre imagenes completas de `data/yolo/test/images`:
+Ejecutar una imagen concreta de la demo:
 
 ```bash
 docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app-gpu \
-  python3 scripts/run_integrated_pipeline_evaluation.py \
-  --images-dir data/yolo/test/images \
-  --yolo-model models/yolo/extinguisher_yolo_v1/weights/best.pt \
-  --classifier-model models/classifier/state_classifier_context_v2.pt \
-  --output-dir outputs/detections/integrated_pipeline_v1 \
-  --max-images 50 \
-  --confidence-threshold 0.25 \
-  --classifier-context-padding 0.75 \
-  --classifier-square-crop \
-  --image-size 224 \
-  --save-crops \
-  --save-json \
-  --contact-sheet-output outputs/reports/integrated_pipeline_v1_contact_sheet.jpg
+  python3 scripts/inferir_imagen.py \
+  --image demo/imagenes/visible/visible_01.jpg \
+  --output-dir outputs/detections/demo_imagen \
+  --save-json
 ```
 
-Prueba balanceada de estados con `data/classifier_context_v2/test`:
+## Probar una imagen
+
+Coloca una imagen en `data/raw/`, por ejemplo:
+
+```text
+data/raw/imagen.jpg
+```
+
+Ejecuta:
 
 ```bash
 docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app-gpu \
-  python3 scripts/run_integrated_pipeline_evaluation.py \
-  --images-dir data/classifier_context_v2/test \
-  --yolo-model models/yolo/extinguisher_yolo_v1/weights/best.pt \
-  --classifier-model models/classifier/state_classifier_context_v2.pt \
-  --output-dir outputs/detections/integrated_pipeline_v1_balanced \
-  --max-images 60 \
-  --max-images-per-class 20 \
-  --confidence-threshold 0.25 \
-  --classifier-context-padding 0.75 \
-  --classifier-square-crop \
-  --image-size 224 \
-  --save-crops \
-  --save-json \
-  --contact-sheet-output outputs/reports/integrated_pipeline_v1_balanced_contact_sheet.jpg
+  python3 scripts/inferir_imagen.py \
+  --image data/raw/imagen.jpg \
+  --output-dir outputs/detections/prueba_imagen \
+  --save-json
 ```
 
-Las imagenes anotadas, crops contextuales, JSON, resumenes y contact sheets se guardan en `outputs/`. Los modelos, datasets y outputs generados no se versionan en Git. El informe de esta evaluacion queda en `docs/integrated_pipeline_v1_evaluation.md`.
+El comando devuelve un JSON en consola y guarda resultados en:
 
-## Inferencia sobre imagen
+```text
+outputs/detections/prueba_imagen/
+├── annotated/
+└── json/
+```
+
+En el JSON, cada detección incluye:
+
+- `bbox`: caja del extintor;
+- `detection_confidence`: confianza de YOLO;
+- `status_prediction`: estado estimado;
+- `status_confidence`: confianza de la CNN;
+- `status_probabilities`: probabilidades por clase.
+
+## Probar una carpeta de imágenes
+
+Deja varias imágenes en `data/raw/` y ejecuta:
 
 ```bash
-python3 scripts/run_image_inference.py --image path/a/imagen.jpg --save-crops
+docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app-gpu \
+  python3 scripts/evaluar_pipeline.py \
+  --images-dir data/raw \
+  --output-dir outputs/detections/prueba_lote \
+  --save-json
 ```
 
-Por defecto la CNN recibe un crop contextual con `classifier_context_padding=0.75` y crop cuadrado. Se puede ajustar con `--classifier-context-padding`, `--classifier-square-crop` o `--no-classifier-square-crop`.
+Este modo es útil para revisar muchas imágenes seguidas y generar una carpeta con resultados.
 
-Si falta el modelo YOLO, el resultado incluirá un error controlado. Si falta el modelo CNN pero sí existe YOLO, el pipeline devolverá detecciones sin clasificación de estado.
+## Usar la API
 
-## Inferencia sobre vídeo o webcam
-
-Vídeo:
-
-```bash
-python3 scripts/run_video_inference.py --source path/a/video.mp4 --output outputs/detections/video_anotado.mp4
-```
-
-Webcam:
-
-```bash
-python3 scripts/run_video_inference.py --source 0 --show
-```
-
-## Generación de crops
-
-Cuando exista un detector YOLO entrenado, se pueden generar recortes sin etiqueta para construir el dataset del clasificador:
-
-```bash
-python3 scripts/generate_crops_from_yolo.py \
-  --input-dir data/raw \
-  --output-dir outputs/crops/generated
-```
-
-El script no inventa etiquetas; guarda crops y metadatos para revisión manual.
-
-## API
-
-Arranque local:
-
-```bash
-PYTHONPATH=src uvicorn fire_extinguisher_inspection.api.main:app --host 0.0.0.0 --port 8000
-```
-
-Endpoints:
-
-- `GET /health`
-- `POST /inspect/image`
-
-Ejemplo:
-
-```bash
-curl -X POST "http://localhost:8000/inspect/image?guardar_anotada=true" \
-  -F "file=@path/a/imagen.jpg"
-```
-
-La respuesta es JSON con `image_path`, `detections`, `warnings` y `errors`.
-
-## Docker
-
-Construir y abrir shell:
-
-```bash
-docker compose -f docker/docker-compose.yml build
-docker compose -f docker/docker-compose.yml run --rm app
-```
-
-Levantar API:
+Para levantar el servicio:
 
 ```bash
 docker compose -f docker/docker-compose.yml up api
 ```
 
-El contenedor monta el repositorio en `/workspace` y define `PYTHONPATH=/workspace/src`. No asume GPU.
-La imagen instala PyTorch en variante CPU para evitar dependencias CUDA innecesarias.
+Probar desde Swagger:
 
-Construir shell con soporte GPU:
+1. Abre `http://localhost:8000/docs` en el navegador.
+2. Usa `GET /health` para comprobar que la API está levantada.
+3. Usa `POST /inspect/image` para subir una imagen.
+4. Usa `POST /inspect/images` para subir varias imágenes de la demo en una sola petición.
+5. Usa `POST /inspect/folder` para subir la carpeta de la demo comprimida en un ZIP.
+6. Usa `POST /inspect/folder/zip` si quieres descargar un ZIP con el JSON y las imágenes anotadas.
 
-```bash
-docker compose -f docker/docker-compose.yml build app-gpu
-docker compose -f docker/docker-compose.yml run --rm --no-deps app-gpu
-```
+En Swagger hay que pulsar `Try it out`, seleccionar los archivos y ejecutar la petición. Para la demo completa se pueden seleccionar todas las imágenes de `demo/imagenes/` desde el campo `files` del endpoint `/inspect/images`.
 
-Comprobar CUDA dentro del contenedor GPU:
-
-```bash
-docker compose -f docker/docker-compose.yml run --rm --no-deps app-gpu \
-  python3 -c "import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'sin GPU')"
-```
-
-Para revisar la configuración de Compose sin construir la imagen:
+Si se prefiere subir la demo como una carpeta completa, primero se comprime:
 
 ```bash
-docker compose -f docker/docker-compose.yml config
+python3 -m zipfile -c outputs/demo_imagenes.zip demo/imagenes
 ```
 
-Si el entorno no puede descargar `python:3.12-slim` pero ya existe una imagen Python local, se puede indicar una base alternativa:
+Después se abre `POST /inspect/folder` en Swagger y se selecciona `outputs/demo_imagenes.zip` en el campo `archivo_zip`.
+
+Si se quiere recibir también las imágenes con las detecciones dibujadas, se usa `POST /inspect/folder/zip`. Swagger descargará un archivo `resultados_inspeccion.zip` con:
+
+- `resultados.json`;
+- `annotated/`, con las imágenes procesadas y sus cajas dibujadas.
+
+Comprobar estado:
 
 ```bash
-PYTHON_IMAGE=<imagen-python-local> docker compose -f docker/docker-compose.yml build
+curl http://localhost:8000/health
 ```
 
-## Estado actual
+Enviar una imagen:
 
-Incluido:
+```bash
+curl -X POST \
+  -F "file=@demo/imagenes/visible/visible_01.jpg" \
+  "http://localhost:8000/inspect/image"
+```
 
-- estructura profesional del proyecto
-- configuración centralizada
-- detector YOLO preparado
-- entrenamiento YOLO por CLI
-- CNN baseline en PyTorch
-- entrenamiento e inferencia del clasificador
-- pipeline completo con manejo de modelos ausentes
-- visualización de resultados
-- API FastAPI
-- scripts de uso
-- Docker
-- tests mínimos y smoke test
-- dataset YOLO inicial preparado localmente cuando existe `data/yolo/data.yaml`
-- entrenamiento corto YOLO26 de 3 épocas verificado en GPU local; resultados ignorados por Git
+Enviar la demo completa por API:
 
-Pendiente antes de entrenar:
+```bash
+args=()
+while IFS= read -r imagen; do
+  args+=(-F "files=@${imagen}")
+done < <(find demo/imagenes -type f \( -name "*.jpg" -o -name "*.png" \) | sort)
 
-- lanzar entrenamiento YOLO real de 50 épocas si se acepta el dataset actual
-- generar y etiquetar crops para `data/classifier`
-- entrenar pesos reales definitivos
-- evaluar detector, clasificador y pipeline completo con métricas medidas
+curl -X POST "${args[@]}" \
+  "http://localhost:8000/inspect/images"
+```
+
+Enviar la demo como carpeta comprimida:
+
+```bash
+python3 -m zipfile -c outputs/demo_imagenes.zip demo/imagenes
+
+curl -X POST \
+  -F "archivo_zip=@outputs/demo_imagenes.zip" \
+  "http://localhost:8000/inspect/folder"
+```
+
+Enviar la demo y descargar resultados anotados:
+
+```bash
+python3 -m zipfile -c outputs/demo_imagenes.zip demo/imagenes
+
+curl -X POST \
+  -F "archivo_zip=@outputs/demo_imagenes.zip" \
+  "http://localhost:8000/inspect/folder/zip" \
+  --output outputs/resultados_inspeccion.zip
+```
+
+La API no recibe una carpeta como ruta local del cliente; recibe archivos. Para una carpeta completa hay dos opciones: subir todas las imágenes con `/inspect/images` o comprimir la carpeta y subir el ZIP con `/inspect/folder`. Si además se quieren descargar las imágenes anotadas desde Swagger, se usa `/inspect/folder/zip`. Un robot inspector normalmente usaría `/inspect/image` para cada captura, aunque también puede usar los endpoints de lote si agrupa varias imágenes.
+
+## Validaciones útiles
+
+Validar dataset YOLO:
+
+```bash
+docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app-gpu \
+  python3 scripts/validar_dataset.py --tipo yolo --path data/yolo/data.yaml
+```
+
+Validar dataset CNN:
+
+```bash
+docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app-gpu \
+  python3 scripts/validar_dataset.py --tipo classifier --path data/classifier_context_final_v7 --require-images
+```
+
+Ejecutar tests:
+
+```bash
+docker compose -f docker/docker-compose.yml run --rm --no-deps --user "$(id -u):$(id -g)" app-gpu \
+  python3 -m unittest discover -s tests
+```
+
+## Estado final
+
+El proyecto queda preparado para demostración, revisión académica y pruebas controladas. La estructura conserva lo necesario para explicar el proceso completo sin mantener todos los artefactos intermedios. Las carpetas antiguas de experimentos se han eliminado o resumido en la documentación.

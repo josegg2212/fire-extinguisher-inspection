@@ -20,6 +20,10 @@ class DetectionResult:
     status_prediction: str | None = None
     status_confidence: float | None = None
     status_probabilities: dict[str, float] | None = None
+    raw_status_prediction: str | None = None
+    raw_status_confidence: float | None = None
+    raw_status_probabilities: dict[str, float] | None = None
+    status_adjustment: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convierte el resultado a diccionario serializable."""

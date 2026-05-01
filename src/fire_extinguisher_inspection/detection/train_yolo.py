@@ -17,8 +17,11 @@ def crear_parser() -> argparse.ArgumentParser:
     parser.add_argument("--data", required=True, help="Ruta al data.yaml del dataset YOLO.")
     parser.add_argument(
         "--model",
-        default="yolo26n.pt",
-        help="Modelo base de Ultralytics. Recomendado: yolo26n.pt; fallback compatible: yolo11n.pt.",
+        default="models/yolo/base/yolo26n.pt",
+        help=(
+            "Modelo base de Ultralytics. Por defecto usa el peso local limpio; "
+            "tambien acepta nombres como yolo26n.pt o yolo11n.pt."
+        ),
     )
     parser.add_argument("--epochs", type=int, default=100, help="Número de épocas.")
     parser.add_argument("--imgsz", type=int, default=640, help="Tamaño de imagen para entrenamiento.")

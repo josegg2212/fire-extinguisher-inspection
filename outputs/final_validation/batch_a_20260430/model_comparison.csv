@@ -1,0 +1,10 @@
+run,correct,detected_evaluable,evaluable,no_detection,accuracy_detected,accuracy_including_no_detection
+manual_validation_real_new_20260430_v6_imgsz1536,17,31,32,1,0.548387,0.531250
+manual_validation_real_new_20260430_v6_v5verifier_imgsz1536,18,31,32,1,0.580645,0.562500
+manual_validation_real_new_20260430_v7_imgsz1536,19,31,32,1,0.612903,0.593750
+manual_validation_real_new_20260430_v7_v5verifier_imgsz1536,21,31,32,1,0.677419,0.656250
+manual_validation_real_new_20260430_v7_v5verifier_imgsz1664,22,31,32,1,0.709677,0.687500
+manual_validation_real_new_20260430_v7_v5verifier_imgsz1728,22,31,32,1,0.709677,0.687500
+manual_validation_real_new_20260430_v7_v5verifier_imgsz1792,23,32,32,0,0.718750,0.718750
+manual_validation_real_new_20260430_v7_v5verifier_imgsz1920,22,30,32,2,0.733333,0.687500
+manual_validation_real_new_20260430_v7_v5verifier_imgsz2048,22,30,32,2,0.733333,0.687500

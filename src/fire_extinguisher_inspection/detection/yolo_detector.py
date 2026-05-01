@@ -35,10 +35,12 @@ class YoloExtinguisherDetector:
         model_path: str | Path,
         confidence_threshold: float = 0.25,
         class_names: dict[int, str] | None = None,
+        image_size: int | None = None,
     ) -> None:
         self.model_path = Path(model_path)
         self.confidence_threshold = float(confidence_threshold)
         self.class_names = class_names or {0: "fire_extinguisher"}
+        self.image_size = int(image_size) if image_size is not None else None
 
         if not self.model_path.exists():
             raise FileNotFoundError(
@@ -63,11 +65,15 @@ class YoloExtinguisherDetector:
         if not ruta_imagen.exists():
             raise FileNotFoundError(f"No existe la imagen de entrada: {ruta_imagen}")
 
-        resultados = self.model.predict(
-            source=str(ruta_imagen),
-            conf=self.confidence_threshold,
-            verbose=False,
-        )
+        parametros: dict[str, Any] = {
+            "source": str(ruta_imagen),
+            "conf": self.confidence_threshold,
+            "verbose": False,
+        }
+        if self.image_size is not None:
+            parametros["imgsz"] = self.image_size
+
+        resultados = self.model.predict(**parametros)
         if not resultados:
             return []
 

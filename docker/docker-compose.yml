@@ -1,24 +1,32 @@
 services:
+  # Contenedor de trabajo en CPU.
+  # Se usa para comandos ligeros, revisión de estructura y ejecución sin GPU.
   app:
     build:
       context: ..
       dockerfile: docker/Dockerfile
       args:
+        # La imagen y las versiones de PyTorch se pueden cambiar desde variables de entorno.
         PYTHON_IMAGE: ${PYTHON_IMAGE:-python:3.12-slim}
         TORCH_VERSION: ${TORCH_VERSION:-2.8.0+cpu}
         TORCHVISION_VERSION: ${TORCHVISION_VERSION:-0.23.0+cpu}
         TORCH_INDEX_URL: ${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cpu}
     working_dir: /workspace
     volumes:
+      # El repositorio se monta completo para poder leer datos, modelos y salidas locales.
       - ../:/workspace
     environment:
+      # Permite importar el paquete sin instalarlo como dependencia del sistema.
       PYTHONPATH: /workspace/src
       CONFIG_PATH: config/default.yaml
       CLASSES_PATH: config/classes.yaml
+      # Evita que Ultralytics y Matplotlib escriban configuración en el HOME del usuario.
       YOLO_CONFIG_DIR: /tmp
       MPLCONFIGDIR: /tmp/matplotlib
     command: bash
 
+  # Contenedor principal para inferencia y pruebas con GPU.
+  # Es el recomendado para la demo y para ejecutar el pipeline completo.
   app-gpu:
     build:
       context: ..
@@ -37,11 +45,14 @@ services:
       CLASSES_PATH: config/classes.yaml
       YOLO_CONFIG_DIR: /tmp
       MPLCONFIGDIR: /tmp/matplotlib
+      # Variables esperadas por el runtime de NVIDIA dentro del contenedor.
       NVIDIA_VISIBLE_DEVICES: all
       NVIDIA_DRIVER_CAPABILITIES: compute,utility
     gpus: all
     command: bash
 
+  # Servicio HTTP para integrar el sistema desde otros programas.
+  # Expone un endpoint que recibe una imagen y devuelve el resultado en JSON.
   api:
     build:
       context: ..
@@ -61,5 +72,6 @@ services:
       YOLO_CONFIG_DIR: /tmp
       MPLCONFIGDIR: /tmp/matplotlib
     ports:
+      # Puerto local usado para probar la API desde navegador, curl o un robot inspector.
       - "8000:8000"
     command: uvicorn fire_extinguisher_inspection.api.main:app --host 0.0.0.0 --port 8000

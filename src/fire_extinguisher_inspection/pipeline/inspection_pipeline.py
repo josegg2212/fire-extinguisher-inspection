@@ -26,6 +26,7 @@ class InspectionPipeline:
         self.config = config or cargar_configuracion()
         self._detector: YoloExtinguisherDetector | None = None
         self._clasificador: CNNStatePredictor | None = None
+        self._verificador_visibilidad: CNNStatePredictor | None = None
 
     def inspeccionar_imagen(
         self,
@@ -64,6 +65,9 @@ class InspectionPipeline:
             return resultado
 
         clasificador = self._cargar_clasificador(resultado)
+        verificador_visibilidad = (
+            self._cargar_verificador_visibilidad(resultado) if clasificador is not None else None
+        )
 
         for indice, deteccion_yolo in enumerate(detecciones_yolo):
             deteccion = DetectionResult(
@@ -99,10 +103,29 @@ class InspectionPipeline:
 
             if clasificador is not None:
                 try:
-                    clase, confianza, probabilidades = clasificador.predecir_array_bgr(crop)
+                    clase_raw, confianza_raw, probabilidades_raw = clasificador.predecir_array_bgr(crop)
+                    clase, confianza, ajuste = self._calibrar_estado_bloqueo_parcial(
+                        clase_raw,
+                        confianza_raw,
+                        probabilidades_raw,
+                    )
+                    probabilidades = probabilidades_raw
+                    clase, confianza, probabilidades, ajuste = self._aplicar_verificador_visibilidad(
+                        crop,
+                        clase,
+                        confianza,
+                        probabilidades,
+                        ajuste,
+                        verificador_visibilidad,
+                    )
                     deteccion.status_prediction = clase
                     deteccion.status_confidence = confianza
                     deteccion.status_probabilities = probabilidades
+                    if ajuste is not None:
+                        deteccion.raw_status_prediction = clase_raw
+                        deteccion.raw_status_confidence = confianza_raw
+                        deteccion.raw_status_probabilities = probabilidades_raw
+                        deteccion.status_adjustment = ajuste
                     if confianza < self.config.inferencia.classification_confidence_threshold:
                         resultado.warnings.append(
                             f"La clasificación de la detección {indice} está por debajo del umbral: "
@@ -122,6 +145,58 @@ class InspectionPipeline:
 
         return resultado
 
+    def _calibrar_estado_bloqueo_parcial(
+        self,
+        clase: str,
+        confianza: float,
+        probabilidades: dict[str, float],
+    ) -> tuple[str, float, str | None]:
+        """Rebaja bloqueos ambiguos a parcialmente ocultos cuando ambas clases estan cerca."""
+
+        if clase != "blocked":
+            return clase, confianza, None
+
+        prob_blocked = float(probabilidades.get("blocked", 0.0))
+        prob_partial = float(probabilidades.get("partially_occluded", 0.0))
+        margen = self.config.inferencia.blocked_to_partial_margin
+        minimo_partial = self.config.inferencia.blocked_to_partial_min_probability
+        if prob_partial >= minimo_partial and prob_blocked - prob_partial <= margen:
+            return "partially_occluded", prob_partial, "blocked_to_partial_calibration"
+        return clase, confianza, None
+
+    def _aplicar_verificador_visibilidad(
+        self,
+        crop,
+        clase: str,
+        confianza: float,
+        probabilidades: dict[str, float],
+        ajuste: str | None,
+        verificador_visibilidad: CNNStatePredictor | None,
+    ) -> tuple[str, float, dict[str, float], str | None]:
+        """Promociona partial a visible solo cuando un segundo modelo lo confirma."""
+
+        if verificador_visibilidad is None or clase != "partially_occluded":
+            return clase, confianza, probabilidades, ajuste
+
+        prob_visible_primaria = float(probabilidades.get("visible", 0.0))
+        prob_blocked_primaria = float(probabilidades.get("blocked", 0.0))
+        if prob_visible_primaria < self.config.inferencia.visibility_verifier_primary_min_visible_probability:
+            return clase, confianza, probabilidades, ajuste
+        if prob_blocked_primaria > self.config.inferencia.visibility_verifier_primary_max_blocked_probability:
+            return clase, confianza, probabilidades, ajuste
+
+        clase_verificador, _confianza_verificador, probabilidades_verificador = (
+            verificador_visibilidad.predecir_array_bgr(crop)
+        )
+        prob_visible_verificador = float(probabilidades_verificador.get("visible", 0.0))
+        if (
+            clase_verificador == "visible"
+            and prob_visible_verificador >= self.config.inferencia.visibility_verifier_min_visible_probability
+        ):
+            return "visible", prob_visible_verificador, probabilidades_verificador, "visibility_verifier"
+
+        return clase, confianza, probabilidades, ajuste
+
     def _cargar_detector(self, resultado: InspectionResult) -> YoloExtinguisherDetector | None:
         """Carga YOLO una sola vez para procesar lotes de imágenes."""
 
@@ -133,6 +208,7 @@ class InspectionPipeline:
                 model_path=self.config.modelos.yolo,
                 confidence_threshold=self.config.inferencia.detection_confidence_threshold,
                 class_names=self.config.clases.detection,
+                image_size=self.config.inferencia.yolo_imgsz,
             )
             return self._detector
         except Exception as exc:
@@ -172,6 +248,32 @@ class InspectionPipeline:
             return self._clasificador
         except Exception as exc:
             resultado.warnings.append(f"No se pudo cargar el clasificador CNN: {exc}")
+            return None
+
+    def _cargar_verificador_visibilidad(self, resultado: InspectionResult) -> CNNStatePredictor | None:
+        if self._verificador_visibilidad is not None:
+            return self._verificador_visibilidad
+
+        ruta_modelo = self.config.modelos.visibility_verifier
+        if ruta_modelo is None:
+            return None
+
+        if not ruta_modelo.exists():
+            resultado.warnings.append(
+                f"No existe el verificador de visibles en {ruta_modelo}. "
+                "Se usa solo el clasificador principal."
+            )
+            return None
+
+        try:
+            self._verificador_visibilidad = CNNStatePredictor(
+                model_path=ruta_modelo,
+                class_names=self.config.clases.classification,
+                image_size=self.config.inferencia.cnn_image_size,
+            )
+            return self._verificador_visibilidad
+        except Exception as exc:
+            resultado.warnings.append(f"No se pudo cargar el verificador de visibles: {exc}")
             return None
 
     def _ruta_crop(self, ruta_imagen: Path, indice: int) -> Path:

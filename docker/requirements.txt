@@ -1,9 +1,16 @@
+# API HTTP.
 fastapi
-httpx
 uvicorn
 python-multipart
+
+# Cliente de pruebas para FastAPI.
+httpx
+
+# Detección y procesamiento de imágenes.
 ultralytics
 opencv-python-headless
 numpy<2
 Pillow
+
+# Lectura de configuración YAML.
 PyYAML

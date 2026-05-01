@@ -60,8 +60,8 @@ def calcular_region_contextual(
     region_alto = y2c - y1c
     lado = max(region_ancho, region_alto)
 
-    # Si la imagen no permite un cuadrado que contenga toda la region ampliada,
-    # se conserva la region rectangular para no cortar el extintor.
+    # Si la imagen no permite un cuadrado que contenga toda la región ampliada,
+    # se conserva la región rectangular para no cortar el extintor.
     if lado > ancho_imagen or lado > alto_imagen:
         return x1c, y1c, x2c, y2c
 

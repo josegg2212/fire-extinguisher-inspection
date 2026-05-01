@@ -1,32 +1,50 @@
+# Rutas generales de entrada.
 rutas:
   imagenes_entrada: data/raw
 
+# Pesos usados por el sistema final.
 modelos:
-  yolo: models/yolo/extinguisher_yolo.pt
-  yolo_base: yolo26n.pt
-  cnn: models/classifier/state_classifier.pt
+  yolo: models/yolo/extinguisher_yolo_v1/weights/best.pt
+  yolo_base: models/yolo/base/yolo26n.pt
+  cnn: models/classifier/state_classifier_context_v7_real_tuned_with_manual_tests.pt
+  # Se deja desactivado porque la configuración final funciona mejor sin verificador auxiliar.
+  visibility_verifier: null
 
+# Datasets conservados para trazabilidad y validación.
 datasets:
   yolo_root: data/yolo
   yolo_yaml: data/yolo/data.yaml
-  classifier_root: data/classifier
+  classifier_root: data/classifier_context_final_v7
 
+# Carpetas de salida generadas por inferencia, evaluación y logs.
 outputs:
   detections: outputs/detections
   crops: outputs/crops
   reports: outputs/reports
   logs: outputs/logs
 
+# Parámetros de inferencia usados por el pipeline final.
 inferencia:
-  detection_confidence_threshold: 0.25
+  # Umbral bajo para no perder extintores pequeños o parcialmente tapados.
+  detection_confidence_threshold: 0.05
+  # Tamaño alto para mejorar detecciones en imágenes de mayor resolución.
+  yolo_imgsz: 1920
   classification_confidence_threshold: 0.50
   cnn_image_size: 224
   crop_margin: 0.05
+  # La CNN recibe contexto alrededor de la caja detectada, no solo el recorte ajustado.
   classifier_context_padding: 0.75
   classifier_square_crop: true
+  # Reglas conservadas de ajuste fino; con el verificador desactivado no cambian la salida final.
+  blocked_to_partial_margin: 0.20
+  blocked_to_partial_min_probability: 0.35
+  visibility_verifier_min_visible_probability: 0.55
+  visibility_verifier_primary_min_visible_probability: 0.20
+  visibility_verifier_primary_max_blocked_probability: 0.30
   guardar_crops: false
   guardar_anotada: true
 
+# Configuración del servicio HTTP.
 api:
   host: 0.0.0.0
   port: 8000

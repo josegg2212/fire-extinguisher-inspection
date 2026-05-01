@@ -1,0 +1,123 @@
+{
+  "model": "state_classifier_context_v7_real_tuned_with_manual_tests.pt + state_classifier_context_v5_visible_balanced.pt",
+  "yolo": "extinguisher_yolo_v1/weights/best.pt",
+  "yolo_imgsz": 1792,
+  "total_crops": 36,
+  "excluded_no_extinguisher": 4,
+  "evaluated_crops": 32,
+  "detected_evaluated_crops": 32,
+  "no_detection_evaluated_crops": 0,
+  "correct_best_detection": 23,
+  "accuracy_detected_best_detection": 0.71875,
+  "accuracy_including_no_detection": 0.71875,
+  "expected_counts": {
+    "visible": 16,
+    "partially_occluded": 13,
+    "blocked": 3
+  },
+  "prediction_counts_best_detection": {
+    "visible": 16,
+    "partially_occluded": 12,
+    "blocked": 4
+  },
+  "confusion_best_detection": {
+    "visible": {
+      "visible": 13,
+      "partially_occluded": 2,
+      "blocked": 1
+    },
+    "partially_occluded": {
+      "partially_occluded": 9,
+      "visible": 2,
+      "blocked": 2
+    },
+    "blocked": {
+      "blocked": 1,
+      "visible": 1,
+      "partially_occluded": 1
+    }
+  },
+  "misses": [
+    {
+      "index": 5,
+      "filename": "Gemini_Generated_Image_l0bl9sl0bl9sl0bl__r2c1.jpg",
+      "expected": "partially_occluded",
+      "predicted": "visible",
+      "detections": 1,
+      "detection_confidence": 0.9519938230514526,
+      "status_confidence": 0.8554475903511047
+    },
+    {
+      "index": 7,
+      "filename": "Gemini_Generated_Image_l0bl9sl0bl9sl0bl__r2c3.jpg",
+      "expected": "blocked",
+      "predicted": "visible",
+      "detections": 1,
+      "detection_confidence": 0.45987194776535034,
+      "status_confidence": 0.9585049152374268
+    },
+    {
+      "index": 8,
+      "filename": "Gemini_Generated_Image_l0bl9sl0bl9sl0bl__r2c4.jpg",
+      "expected": "blocked",
+      "predicted": "partially_occluded",
+      "detections": 1,
+      "detection_confidence": 0.2542552053928375,
+      "status_confidence": 0.8028834462165833
+    },
+    {
+      "index": 12,
+      "filename": "Gemini_Generated_Image_l0bl9sl0bl9sl0bl__r3c4.jpg",
+      "expected": "partially_occluded",
+      "predicted": "visible",
+      "detections": 1,
+      "detection_confidence": 0.5714548230171204,
+      "status_confidence": 0.982151985168457
+    },
+    {
+      "index": 16,
+      "filename": "Gemini_Generated_Image_puna1dpuna1dpuna__r1c4.jpg",
+      "expected": "visible",
+      "predicted": "partially_occluded",
+      "detections": 1,
+      "detection_confidence": 0.9359375238418579,
+      "status_confidence": 0.4471539855003357
+    },
+    {
+      "index": 17,
+      "filename": "Gemini_Generated_Image_puna1dpuna1dpuna__r2c1.jpg",
+      "expected": "partially_occluded",
+      "predicted": "blocked",
+      "detections": 2,
+      "detection_confidence": 0.5164638757705688,
+      "status_confidence": 0.8033820986747742
+    },
+    {
+      "index": 20,
+      "filename": "Gemini_Generated_Image_puna1dpuna1dpuna__r2c4.jpg",
+      "expected": "partially_occluded",
+      "predicted": "blocked",
+      "detections": 1,
+      "detection_confidence": 0.8857013583183289,
+      "status_confidence": 0.8505531549453735
+    },
+    {
+      "index": 21,
+      "filename": "Gemini_Generated_Image_puna1dpuna1dpuna__r3c1.jpg",
+      "expected": "visible",
+      "predicted": "partially_occluded",
+      "detections": 1,
+      "detection_confidence": 0.8948459625244141,
+      "status_confidence": 0.828498363494873
+    },
+    {
+      "index": 30,
+      "filename": "Gemini_Generated_Image_zedo78zedo78zedo__r2c2.jpg",
+      "expected": "visible",
+      "predicted": "blocked",
+      "detections": 1,
+      "detection_confidence": 0.9106152057647705,
+      "status_confidence": 0.7267480492591858
+    }
+  ]
+}
