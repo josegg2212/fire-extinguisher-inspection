@@ -43,6 +43,8 @@ Se usó `yolo26n.pt` como base del detector porque es una variante ligera, adecu
 
 La CNN de estado recibe crops RGB de `224x224`. Está formada por bloques `Conv2d + BatchNorm + ReLU + MaxPool`, una agregación final con `AdaptiveAvgPool` y capas densas con `Dropout`. La salida tiene tres clases: `visible`, `partially_occluded` y `blocked`.
 
+El entorno se ejecuta con Docker para mantener dependencias reproducibles y separar el sistema local del proyecto. Para entrenamiento e inferencia completa se usa el servicio `app-gpu`, que aprovecha CUDA cuando hay GPU disponible.
+
 El detalle técnico completo está en `docs/15_fundamento_tecnico.md`.
 
 ## Estructura del repositorio

@@ -17,6 +17,86 @@ El pipeline final queda asi:
 imagen completa -> YOLO -> bbox del extintor -> crop contextual -> CNN -> estado
 ```
 
+## Decisiones tecnicas principales
+
+### Separacion en detector y clasificador
+
+El sistema se separo en dos modelos porque la localizacion y la clasificacion del estado son tareas distintas. YOLO se encarga de encontrar los extintores dentro de la imagen completa. Despues, la CNN recibe un recorte de cada extintor y decide su estado visual.
+
+Esta separacion permite procesar imagenes con varios extintores. Cada deteccion tiene su propia caja, su propio crop y su propia clasificacion. Si se hubiese usado un unico clasificador sobre la imagen completa, el sistema no podria distinguir facilmente el estado de cada extintor por separado.
+
+### Uso de Docker
+
+Se decidio trabajar con Docker para controlar el entorno de ejecucion. El proyecto usa librerias pesadas como PyTorch, Torchvision, Ultralytics, OpenCV y FastAPI. Estas dependencias pueden dar problemas si se instalan directamente sobre el sistema local, especialmente cuando intervienen versiones concretas de CUDA.
+
+Docker aporta cuatro ventajas principales:
+
+- reproducibilidad del entorno;
+- separacion entre el sistema local y el entorno del proyecto;
+- ejecucion mas sencilla en otro equipo;
+- menor riesgo de errores por versiones distintas de Python, PyTorch o Ultralytics.
+
+Por eso el repositorio incluye `docker/Dockerfile` y `docker/docker-compose.yml`. El contenedor monta el repositorio en `/workspace`, define `PYTHONPATH=/workspace/src` y permite ejecutar scripts, tests, API e inferencia sin instalar el paquete manualmente en el sistema.
+
+### Uso de GPU
+
+La GPU se uso porque el entrenamiento de redes profundas en CPU era demasiado lento para este proyecto. Tanto YOLO como la CNN se entrenaron con PyTorch y Ultralytics, que aprovechan CUDA cuando esta disponible.
+
+En Docker Compose se dejo un servicio especifico:
+
+```text
+app-gpu
+```
+
+Ese servicio instala PyTorch con soporte CUDA, expone la GPU mediante `gpus: all` y configura las variables esperadas por el runtime de NVIDIA. Fue el entorno usado para entrenar y validar los modelos principales. Tambien es el recomendado para la demo, porque mantiene el mismo entorno que se uso durante el desarrollo.
+
+El servicio `app` se conserva para tareas ligeras en CPU. El servicio `api` levanta FastAPI para integrar el sistema desde navegador, `curl` u otro programa.
+
+### Eleccion de YOLO26n
+
+Se eligio `yolo26n.pt` como modelo base por equilibrio entre coste y rendimiento. La variante `n` es ligera y encaja bien con un problema de una sola clase: detectar `fire_extinguisher`.
+
+La decision fue adecuada por varios motivos:
+
+- el dataset de deteccion tenia una clase clara;
+- el modelo podia entrenarse en la GPU local;
+- el coste computacional era asumible;
+- no se necesitaba una arquitectura grande para iniciar el detector;
+- los resultados de test fueron altos para el objetivo del proyecto.
+
+El detector final obtuvo buen rendimiento en test y, durante las pruebas manuales, el principal problema no estuvo en localizar extintores, sino en clasificar su estado.
+
+### Crop contextual
+
+La primera aproximacion de la CNN usaba crops muy ajustados al extintor. Eso hacia que el modelo viera el objeto, pero perdiera informacion importante del entorno.
+
+Para decidir si un extintor esta bloqueado no basta con ver el cilindro. Tambien hay que observar cajas, muebles, paredes, sombras, cristales, soportes y el espacio libre alrededor. Por eso se paso a un crop contextual: se amplia la caja detectada por YOLO antes de pasarla a la CNN.
+
+En la configuracion final se usa:
+
+```yaml
+classifier_context_padding: 0.75
+classifier_square_crop: true
+```
+
+Con esto la CNN recibe una entrada mas parecida a la situacion real de inspeccion.
+
+### CNN simple y explicable
+
+La CNN se mantuvo deliberadamente sencilla. El problema tiene tres clases y el dataset, aunque util, no es tan grande como para justificar una arquitectura muy pesada.
+
+Una red excesivamente grande podia aumentar el riesgo de sobreajuste y hacer mas dificil interpretar el sistema. La arquitectura `simple_cnn` usa bloques convolucionales clasicos, normalizacion por batch, ReLU, pooling y capas densas finales. Es suficiente para construir una baseline clara y permite explicar de forma directa como se extraen caracteristicas visuales del crop.
+
+### Limitaciones
+
+La principal limitacion detectada fue la frontera entre `visible` y `partially_occluded`. En imagenes reales hay casos ambiguos: sombras, baja resolucion, cristales, objetos cercanos o fondos complejos pueden hacer que un extintor visible parezca parcialmente tapado.
+
+Tambien existe dependencia de la calidad del dataset. Si los ejemplos de entrenamiento no cubren bien ciertos fondos, colores, perspectivas u oclusiones, la CNN puede fallar en casos nuevos.
+
+Otra limitacion aparece cuando YOLO no detecta el extintor. Si el extintor esta demasiado oculto o la imagen no contiene suficiente evidencia visual, no se genera crop y la CNN no puede clasificar ese caso.
+
+Por ultimo, el sistema debe entenderse como apoyo a la inspeccion. Puede ayudar a detectar situaciones de riesgo y priorizar revisiones, pero no sustituye una inspeccion normativa completa realizada por personal cualificado.
+
 ## Por que YOLO
 
 YOLO se eligio para la fase de deteccion porque es un detector de objetos de una sola etapa. En una unica pasada predice cajas, clase y confianza. Esto encaja bien con el caso de uso del proyecto:
